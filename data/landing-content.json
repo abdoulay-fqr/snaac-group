@@ -1,0 +1,144 @@
+{
+  "hero": {
+    "titleHighlight": "Économisez jusqu'à 20% de vos charges dès le 1er mois !",
+    "titleLine1": "Seul on est fort",
+    "titleLine2Highlight": "mais ensemble on gagne de l'argent !",
+    "description": "Optimisez jusqu'à 20% de vos charges grâce à SNAAC Group, la centrale d'achats nouvelle génération pour TPE/PME.",
+    "ctaText": "Rejoignez nos rangs en devenant adhérent SNAAC"
+  },
+  "features": [
+    {
+      "icon": "/icon-target.svg",
+      "alt": "Achetez mieux",
+      "title": "Achetez mieux",
+      "description": "Bénéficiez de tarifs négociés auprès de nos fournisseurs partenaires."
+    },
+    {
+      "icon": "https://api.iconify.design/mdi/trending-down.svg",
+      "alt": "Économisez",
+      "title": "Économisez jusqu'à 20%",
+      "description": "Optimisez vos charges et économisez sur vos principaux postes de dépenses."
+    },
+    {
+      "icon": "/team.svg",
+      "alt": "Mutualisez",
+      "title": "Mutualisez votre force",
+      "description": "Intégrez un véritable réseau d'entrepreneurs de votre région."
+    }
+  ],
+  "together": {
+    "title": "Ensemble, invincibles !",
+    "subtitle": "Pourquoi rejoindre SNAAC Group ?",
+    "description": "SNAAC Group est la centrale d'achats des TPE/PME en Rhône-Alpes / Auvergne, partenaire privilégié des entreprises pour les aider à optimiser leurs coûts au sein d'un réseau d'achats groupés.",
+    "benefits": [
+      "Rejoignez le réseau des PME en avantages négociés.",
+      "Bénéficiez d'une expertise et d'un accompagnement personnalisé.",
+      "Voyez concrètement vos économies et le réel retour sur investissement."
+    ],
+    "checklist": [
+      "Tarifs négociés",
+      "Accompagnement personnalisé",
+      "Réseau d'entrepreneurs solidaires",
+      "Suivi et reporting de vos économies",
+      "Accès fournisseurs premium"
+    ],
+    "ctaText": "Devenir adhérent"
+  },
+  "advantages": {
+    "title": "Nos",
+    "titleHighlight": "Avantages",
+    "detailTitle": "Détails",
+    "detailFooter": "Pour plus d'informations, contactez-nous",
+    "bannerText": "Seul, on est fort ! Mais ensemble on est",
+    "bannerHighlight": "INVINCIBLE",
+    "items": [
+      {
+        "title": "Énergie",
+        "icon": "Zap",
+        "description": "Optimisez vos coûts énergétiques grâce à nos partenaires négociés et des offres adaptées aux entreprises."
+      },
+      {
+        "title": "Télécom",
+        "icon": "Phone",
+        "description": "Réduisez vos factures télécom et améliorez vos abonnements professionnels avec des solutions optimisées."
+      },
+      {
+        "title": "Fournitures",
+        "icon": "ShoppingBag",
+        "description": "Accédez à des fournitures professionnelles à prix négociés pour réduire vos dépenses opérationnelles."
+      },
+      {
+        "title": "Assurance",
+        "icon": "Shield",
+        "description": "Bénéficiez de solutions d'assurance adaptées aux besoins des TPE/PME et de leurs activités."
+      },
+      {
+        "title": "Internet",
+        "icon": "Globe",
+        "description": "Optimisez vos abonnements internet professionnels avec des offres performantes et économiques."
+      },
+      {
+        "title": "Véhicules",
+        "icon": "Truck",
+        "description": "Solutions de gestion et optimisation de flotte et véhicules professionnels."
+      },
+      {
+        "title": "Cash & Carry",
+        "icon": "CreditCard",
+        "description": "Accédez à des solutions d'achat en gros pour réduire vos coûts d'approvisionnement."
+      },
+      {
+        "title": "Mutuelle",
+        "icon": "Heart",
+        "description": "Protégez vos employés avec des solutions de mutuelle adaptées et avantageuses."
+      },
+      {
+        "title": "RH",
+        "icon": "Users",
+        "description": "Optimisez la gestion de vos ressources humaines et de vos équipes efficacement."
+      },
+      {
+        "title": "Et plus...",
+        "icon": "MoreHorizontal",
+        "description": ""
+      }
+    ]
+  },
+  "steps": {
+    "title": "Prêt à optimiser vos charges jusqu'à",
+    "titleHighlight": "20%",
+    "subtitle": "Rejoignez les centaines de SNAAC Group et bénéficiez d'avantages exclusifs dès le lancement.",
+    "ctaText": "Rejoindre SNAAC Group",
+    "items": [
+      {
+        "number": "01",
+        "title": "Inscrivez-vous",
+        "description": "Remplissez le formulaire d'adhésion en quelques minutes."
+      },
+      {
+        "number": "02",
+        "title": "Validation",
+        "description": "Notre équipe valide votre dossier rapidement."
+      },
+      {
+        "number": "03",
+        "title": "Économisez",
+        "description": "Accédez immédiatement à tous vos avantages négociés."
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contactez-",
+    "titleHighlight": "nous",
+    "subtitle": "Une question ? Notre équipe est à votre écoute pour vous accompagner dans votre démarche.",
+    "infoEmailLabel": "Email",
+    "infoEmailValue": "contact@snaac-group.com",
+    "infoPhoneLabel": "Téléphone",
+    "infoPhoneValue": "06 64 27 01 93",
+    "infoSiretLabel": "Siret",
+    "infoSiretValue": "399 592 058 R.C.S."
+  },
+  "footer": {
+    "copyright": "© 2026 SNAAC Group - Centrale d'achats nouvelle génération pour TPE/PME. Tous droits réservés."
+  }
+}
