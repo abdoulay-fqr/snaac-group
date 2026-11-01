@@ -402,6 +402,9 @@ export default function AdminDashboardClient() {
             <a href="/" target="_blank" rel="noreferrer" className={secondaryButtonClass} style={secondaryButtonStyle}>
               Ouvrir le site
             </a>
+            <Link href="/admin/emails" className={secondaryButtonClass} style={secondaryButtonStyle}>
+              Emails
+            </Link>
             <Link href="/admin/settings" className={secondaryButtonClass} style={secondaryButtonStyle}>
               Paramètres
             </Link>

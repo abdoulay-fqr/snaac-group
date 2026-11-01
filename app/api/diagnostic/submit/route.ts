@@ -6,7 +6,7 @@ import { diagnostics } from "@/lib/db/schema";
 
 type Payload = Record<string, unknown>;
 
-const DEFAULT_NOTIFICATION_EMAIL = "snaac.notification@gmail.com";
+const DEFAULT_NOTIFICATION_EMAIL = "contact@snaac-group.com";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
