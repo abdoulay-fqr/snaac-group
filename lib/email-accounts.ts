@@ -6,9 +6,9 @@ export const SMTP_HOST = "ssl0.ovh.net";
 export const SMTP_PORT = 465;
 
 // Noms reels des dossiers sur OVH.
-export const EMAIL_FOLDERS = ["INBOX", "Sent", "Junk"] as const;
-export const SENT_FOLDER = "Sent";
-export const TRASH_FOLDER = "Trash";
+export const EMAIL_FOLDERS = ["INBOX", "INBOX.INBOX.Sent", "INBOX.INBOX.Junk"] as const;
+export const SENT_FOLDER = "INBOX.INBOX.Sent";
+export const TRASH_FOLDER = "INBOX.INBOX.Trash";
 
 // En base64 dans du JSON, 3 Mo restent sous la limite de requete de Vercel (4,5 Mo).
 export const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
