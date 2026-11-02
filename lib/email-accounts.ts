@@ -5,6 +5,16 @@ export const IMAP_PORT = 993;
 export const SMTP_HOST = "ssl0.ovh.net";
 export const SMTP_PORT = 465;
 
+// Noms reels des dossiers sur OVH.
+export const EMAIL_FOLDERS = ["INBOX", "Sent", "Junk"] as const;
+export const SENT_FOLDER = "Sent";
+export const TRASH_FOLDER = "Trash";
+
+// En base64 dans du JSON, 3 Mo restent sous la limite de requete de Vercel (4,5 Mo).
+export const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+
+export type EmailFolder = (typeof EMAIL_FOLDERS)[number];
+
 const EMAIL_ACCOUNTS = [
   { id: "webmail", label: "Webmail", email: "webmail@snaac-group.com", passwordEnv: "SNAAC_EMAIL_WEBMAIL_PASS" },
   { id: "direction", label: "Direction", email: "direction@snaac-group.com", passwordEnv: "SNAAC_EMAIL_DIRECTION_PASS" },
@@ -18,6 +28,10 @@ export type EmailAccount = EmailAccountInfo & { pass: string };
 // Version sans secret, seule forme autorisee a passer cote client.
 export function listEmailAccounts(): EmailAccountInfo[] {
   return EMAIL_ACCOUNTS.map(({ id, label, email }) => ({ id, label, email }));
+}
+
+export function getEmailFolder(value: unknown): EmailFolder | null {
+  return EMAIL_FOLDERS.find((folder) => folder === (value ?? "INBOX")) ?? null;
 }
 
 export function getEmailAccount(id: unknown): EmailAccount | null {

@@ -1,7 +1,7 @@
 import type { ImapFlow, MessageStructureObject } from "imapflow";
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
-import { getEmailAccount } from "@/lib/email-accounts";
+import { getEmailAccount, getEmailFolder } from "@/lib/email-accounts";
 import { withInbox } from "@/lib/email-imap";
 
 // Reste sous la limite de reponse de Vercel (4,5 Mo).
@@ -41,13 +41,17 @@ export async function GET(request: Request) {
   if (!account) {
     return NextResponse.json({ error: "Compte email inconnu ou non configuré." }, { status: 400 });
   }
+  const folder = getEmailFolder(searchParams.get("folder"));
+  if (!folder) {
+    return NextResponse.json({ error: "Dossier inconnu." }, { status: 400 });
+  }
   const uid = searchParams.get("uid") ?? "";
   if (!/^[1-9]\d*$/.test(uid)) {
     return NextResponse.json({ error: "Identifiant de message invalide." }, { status: 400 });
   }
 
   try {
-    const email = await withInbox(account, { readOnly: false }, async (client) => {
+    const email = await withInbox(account, { folder, readOnly: false }, async (client) => {
       const message = await client.fetchOne(uid, { uid: true, envelope: true, bodyStructure: true }, { uid: true });
       if (!message || !message.bodyStructure) return null;
 
@@ -55,11 +59,15 @@ export async function GET(request: Request) {
       const text = html === null ? await readPart(client, uid, findPart(message.bodyStructure, "text/plain")) : null;
       await client.messageFlagsAdd(uid, ["\\Seen"], { uid: true });
 
-      const sender = message.envelope?.from?.[0];
+      const { envelope } = message;
       return {
-        subject: message.envelope?.subject ?? "",
-        from: sender?.name && sender.address ? `${sender.name} <${sender.address}>` : sender?.address ?? sender?.name ?? "",
-        date: message.envelope?.date ?? null,
+        subject: envelope?.subject ?? "",
+        from: envelope?.from?.[0] ?? null,
+        replyTo: envelope?.replyTo?.[0] ?? null,
+        to: envelope?.to ?? [],
+        cc: envelope?.cc ?? [],
+        date: envelope?.date ?? null,
+        messageId: envelope?.messageId ?? null,
         html,
         text,
       };

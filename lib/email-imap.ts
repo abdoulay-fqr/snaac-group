@@ -7,7 +7,7 @@ const CONNECTION_TIMEOUT_MS = 10_000;
 // Serverless : une connexion par requete, toujours refermee avant de repondre.
 export async function withInbox<T>(
   account: EmailAccount,
-  options: { readOnly: boolean },
+  { folder = "INBOX", readOnly }: { folder?: string; readOnly: boolean },
   task: (client: ImapFlow) => Promise<T>
 ): Promise<T> {
   const client = new ImapFlow({
@@ -24,7 +24,7 @@ export async function withInbox<T>(
 
   try {
     await client.connect();
-    const lock = await client.getMailboxLock("INBOX", options);
+    const lock = await client.getMailboxLock(folder, { readOnly });
     try {
       return await task(client);
     } finally {

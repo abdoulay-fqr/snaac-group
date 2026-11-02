@@ -11,6 +11,13 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@neondatabase/serverless": "^1.2.0",
+    "@tiptap/extension-color": "^3.32.2",
+    "@tiptap/extension-text-align": "^3.32.2",
+    "@tiptap/extension-text-style": "^3.32.2",
+    "@tiptap/extension-underline": "^3.32.2",
+    "@tiptap/pm": "^3.32.2",
+    "@tiptap/react": "^3.32.2",
+    "@tiptap/starter-kit": "^3.32.2",
     "drizzle-orm": "^0.45.4",
     "imapflow": "^2.10.0",
     "lucide-react": "^1.8.0",
