@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { db } from "@/lib/db";
@@ -9,6 +10,7 @@ type Payload = Record<string, unknown>;
 const DEFAULT_NOTIFICATION_EMAIL = "contact@snaac-group.com";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_CASH_CARRY_PROVIDERS = 6;
 
 const euros = new Intl.NumberFormat("fr-FR", {
   style: "currency",
@@ -23,6 +25,10 @@ function isRecord(value: unknown): value is Payload {
 function text(value: unknown): string {
   if (typeof value === "string") return value.trim();
   return typeof value === "number" ? String(value) : "";
+}
+
+function textList(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(text).filter(Boolean).slice(0, MAX_CASH_CARRY_PROVIDERS) : [];
 }
 
 function toNumber(value: unknown): number {
@@ -109,6 +115,16 @@ function renderEmail(payload: Payload, analysis: Payload, contact: Payload, diag
       ["Email", text(contact.email)],
       ["Téléphone", text(contact.phone)],
       ["Souhaite être rappelé", contact.callbackWanted === true ? "Oui" : "Non"],
+      ["A connu SNAAC par", text(payload.howFound)],
+    ])}</table>
+    <h2 ${heading}>Situation fournisseur</h2>
+    <table style="font-size:14px;">${renderRows([
+      ["Fournisseurs principaux", text(payload.suppliers)],
+      ["Compare les prix", text(payload.compare)],
+      ["Renégocie ses contrats", text(payload.negotiate)],
+      ["Satisfait de ses tarifs", text(payload.satisfaction)],
+      ["Cash & Carry", [...textList(payload.cashCarriers), text(payload.cashOther)].filter(Boolean).join(", ")],
+      ["Dépenses Cash & Carry", `${formatEuros(payload.cashMonthly)} / mois`],
     ])}</table>
     <h2 ${heading}>Score SNAAC</h2>
     <p style="font-size:14px;margin:0;"><strong>${Number.isFinite(score) ? `${score} / 100` : "—"}</strong> ${escapeHtml(text(analysis.label))}</p>
@@ -125,8 +141,11 @@ function renderEmail(payload: Payload, analysis: Payload, contact: Payload, diag
 }
 
 // Un echec d'ecriture en base ne doit pas faire echouer la demande du prospect.
+// Le diagnostic est enregistre a l'affichage des resultats ; une demande de rappel
+// arrive ensuite avec le meme id et ne change que callback_wanted.
 async function saveDiagnostic(payload: Payload, analysis: Payload, contact: Payload, id: string) {
   const savings = isRecord(analysis.savings) ? analysis.savings : {};
+  const cashExpenses = toNumber(payload.cashMonthly);
 
   try {
     await db.insert(diagnostics).values({
@@ -148,7 +167,13 @@ async function saveDiagnostic(payload: Payload, analysis: Payload, contact: Payl
       email: text(contact.email),
       phone: text(contact.phone),
       callbackWanted: contact.callbackWanted === true,
+      cashCarryProviders: textList(payload.cashCarriers),
+      cashCarryExpenses: Number.isFinite(cashExpenses) && cashExpenses >= 0 ? String(cashExpenses) : null,
+      howFound: text(payload.howFound) || null,
       rawPayload: JSON.stringify(payload),
+    }).onConflictDoUpdate({
+      target: diagnostics.id,
+      set: { callbackWanted: sql`${diagnostics.callbackWanted} or excluded.callback_wanted` },
     });
   } catch (error) {
     console.error("Diagnostic DB insert error:", error);
@@ -180,11 +205,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Adresse email invalide." }, { status: 400 });
   }
 
+  // Avant l'envoi : une panne SMTP ne doit pas faire perdre le diagnostic.
+  await saveDiagnostic(payload, analysis, contact, diagnosticId);
+
   const { SNAAC_SMTP_HOST, SNAAC_SMTP_PORT, SNAAC_SMTP_USER, SNAAC_SMTP_PASS } = process.env;
 
   if (!SNAAC_SMTP_HOST || !SNAAC_SMTP_PORT || !SNAAC_SMTP_USER || !SNAAC_SMTP_PASS) {
     console.log("Diagnostic SNAAC (SMTP non configuré) :", JSON.stringify({ ...payload, diagnosticId }));
-    await saveDiagnostic(payload, analysis, contact, diagnosticId);
     return NextResponse.json({ ok: true, stored: "console" });
   }
 
@@ -201,11 +228,10 @@ export async function POST(request: Request) {
       from: SNAAC_SMTP_USER,
       to: process.env.SNAAC_NOTIFICATION_EMAIL || DEFAULT_NOTIFICATION_EMAIL,
       replyTo: email,
-      subject: `Diagnostic SNAAC - ${text(payload.company) || "Entreprise non renseignée"}`,
+      subject: `${contact.callbackWanted === true ? "Demande de rappel" : "Diagnostic"} SNAAC - ${text(payload.company) || "Entreprise non renseignée"}`,
       html: renderEmail(payload, analysis, contact, diagnosticId),
     });
 
-    await saveDiagnostic(payload, analysis, contact, diagnosticId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Diagnostic submit error:", error);

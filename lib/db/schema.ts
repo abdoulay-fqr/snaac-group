@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const diagnostics = pgTable("diagnostics", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -22,6 +22,9 @@ export const diagnostics = pgTable("diagnostics", {
   callbackWanted: boolean("callback_wanted").notNull().default(false),
   status: text("status").$type<"pending" | "treated">().notNull().default("pending"),
   notes: text("notes"),
+  cashCarryProviders: text("cash_carry_providers").array(),
+  cashCarryExpenses: numeric("cash_carry_expenses"),
+  howFound: text("how_found"),
   rawPayload: text("raw_payload").notNull(),
 });
 

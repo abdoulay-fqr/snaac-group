@@ -3,8 +3,7 @@
 import Link from "next/link";
 import type { LandingContent } from "@/lib/content";
 
-const linkClass = "inline-block bg-brand hover:bg-brand-hover text-white px-6 py-3 rounded font-semibold text-sm transition-colors duration-300";
-const outlineLinkClass = "inline-block bg-white hover:bg-brand text-brand hover:text-white border border-brand px-6 py-3 rounded font-semibold text-sm transition-colors duration-300";
+const diagnosticLinkClass = "inline-block bg-brand text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-xl";
 
 export default function Hero({ content }: { content: LandingContent["hero"] }) {
   return (
@@ -31,14 +30,9 @@ export default function Hero({ content }: { content: LandingContent["hero"] }) {
         >
           {content.description}
         </p>
-        <div className="flex flex-wrap gap-4">
-          <a href="#contact" className={linkClass}>
-            {content.ctaText}
-          </a>
-          <Link href="/diagnostic" className={outlineLinkClass}>
-            Faire mon diagnostic gratuit →
-          </Link>
-        </div>
+        <Link href="/diagnostic" className={diagnosticLinkClass}>
+          Je veux économiser sur mes charges →
+        </Link>
       </div>
     </section>
   );

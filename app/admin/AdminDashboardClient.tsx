@@ -70,6 +70,20 @@ function parseItems(diagnostic: Diagnostic): DiagnosticItem[] {
   return Array.isArray(items) ? (items as DiagnosticItem[]) : [];
 }
 
+function parseSupplierSituation(diagnostic: Diagnostic): [string, string][] {
+  const raw = parseJson(diagnostic.rawPayload);
+  const payload = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>) : {};
+  const expenses = diagnostic.cashCarryExpenses;
+  return [
+    ["Fournisseurs principaux", String(payload.suppliers ?? "")],
+    ["Compare les prix", String(payload.compare ?? "")],
+    ["Renégocie ses contrats", String(payload.negotiate ?? "")],
+    ["Satisfait de ses tarifs", String(payload.satisfaction ?? "")],
+    ["Cash & Carry", [...(diagnostic.cashCarryProviders ?? []), String(payload.cashOther ?? "")].filter(Boolean).join(", ")],
+    ["Dépenses Cash & Carry", expenses === null ? "" : `${euros.format(Number(expenses))} / mois`],
+  ];
+}
+
 function parseExpenses(diagnostic: Diagnostic) {
   const raw = parseJson(diagnostic.rawPayload);
   if (typeof raw !== "object" || raw === null) return [];
@@ -92,12 +106,14 @@ function downloadCsv(rows: Diagnostic[]) {
   const header = [
     "Date", "Entreprise", "Activité", "Département", "Ville", "CA", "Score", "Label",
     "Économies basses", "Économies médianes", "Économies hautes", "Prénom", "Nom",
-    "Email", "Téléphone", "Rappel souhaité", "Statut", "Notes",
+    "Email", "Téléphone", "Rappel souhaité", "Cash & Carry", "Dépenses Cash & Carry (€/mois)",
+    "Connu via", "Statut", "Notes",
   ];
   const lines = rows.map((row) => [
     dateTime.format(new Date(row.createdAt)), row.company, row.activity, row.department,
     row.city, row.ca, row.score, row.label, row.savingsLow, row.savingsMid, row.savingsHigh,
     row.firstName, row.lastName, row.email, row.phone, row.callbackWanted ? "Oui" : "Non",
+    row.cashCarryProviders?.join(", ") ?? null, row.cashCarryExpenses, row.howFound,
     STATUS_LABELS[row.status], row.notes,
   ]);
   const csv = [header, ...lines].map((line) => line.map(csvCell).join(";")).join("\r\n");
@@ -216,8 +232,13 @@ function DetailPanel({ diagnostic, onClose, onUpdate }: DetailPanelProps) {
               ["Email", diagnostic.email],
               ["Téléphone", diagnostic.phone],
               ["Rappel souhaité", diagnostic.callbackWanted ? "Oui" : "Non"],
+              ["Connu via", diagnostic.howFound ?? ""],
             ]}
           />
+        </DetailSection>
+
+        <DetailSection title="Situation fournisseur">
+          <DetailRows rows={parseSupplierSituation(diagnostic)} />
         </DetailSection>
 
         <DetailSection title="Résultat">
@@ -486,7 +507,7 @@ export default function AdminDashboardClient() {
             <table className="w-full text-sm text-left">
               <thead>
                 <tr style={{ color: "var(--text-secondary)", borderBottom: "1px solid var(--border-color)" }}>
-                  {["Date", "Entreprise", "Activité", "Ville", "Score", "Économies (mid)", "Contact", "Statut", "Actions"].map((column) => (
+                  {["Date", "Entreprise", "Activité", "Département", "Score", "Économies (mid)", "Contact", "Statut", "Actions"].map((column) => (
                     <th key={column} scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{column}</th>
                   ))}
                 </tr>
@@ -497,7 +518,7 @@ export default function AdminDashboardClient() {
                     <td className="px-4 py-3 whitespace-nowrap">{dateTime.format(new Date(row.createdAt))}</td>
                     <td className="px-4 py-3 font-semibold">{row.company}</td>
                     <td className="px-4 py-3">{row.activity}</td>
-                    <td className="px-4 py-3">{row.city}</td>
+                    <td className="px-4 py-3">{row.department}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{row.score ?? "—"}</td>
                     <td className="px-4 py-3 whitespace-nowrap">{euros.format(row.savingsMid)}</td>
                     <td className="px-4 py-3">

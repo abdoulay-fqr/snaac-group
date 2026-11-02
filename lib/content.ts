@@ -59,8 +59,6 @@ export type LandingContent = {
     infoEmailValue: string;
     infoPhoneLabel: string;
     infoPhoneValue: string;
-    infoSiretLabel: string;
-    infoSiretValue: string;
   };
   footer: {
     copyright: string;
@@ -191,7 +189,7 @@ export const defaultLandingContent: LandingContent = {
     title: "Pret a optimiser vos charges jusqu'a",
     titleHighlight: "20%",
     subtitle:
-      "Rejoignez les centaines de SNAAC Group et beneficiez d'avantages exclusifs des le lancement.",
+      "Rejoignez les adhérents SNAAC Group et bénéficiez d'avantages exclusifs dès le lancement.",
     ctaText: "Rejoindre SNAAC Group",
     items: [
       {
@@ -220,12 +218,10 @@ export const defaultLandingContent: LandingContent = {
     infoEmailValue: "contact@snaac-group.com",
     infoPhoneLabel: "Telephone",
     infoPhoneValue: "06 64 27 01 93",
-    infoSiretLabel: "Siret",
-    infoSiretValue: "399 592 058 R.C.S.",
   },
   footer: {
     copyright:
-      "© 2026 SNAAC Group - Centrale d'achats nouvelle generation pour TPE/PME. Tous droits reserves.",
+      "© 2026 SNAAC Group - Centrale d'achats nouvelle génération pour TPE/PME. Tous droits réservés. | SIRET : 399 592 058 R.C.S.",
   },
 };
 

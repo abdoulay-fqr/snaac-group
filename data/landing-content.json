@@ -107,7 +107,7 @@
   "steps": {
     "title": "Prêt à optimiser vos charges jusqu'à",
     "titleHighlight": "20%",
-    "subtitle": "Rejoignez les centaines de SNAAC Group et bénéficiez d'avantages exclusifs dès le lancement.",
+    "subtitle": "Rejoignez les adhérents SNAAC Group et bénéficiez d'avantages exclusifs dès le lancement.",
     "ctaText": "Rejoindre SNAAC Group",
     "items": [
       {
@@ -134,11 +134,9 @@
     "infoEmailLabel": "Email",
     "infoEmailValue": "contact@snaac-group.com",
     "infoPhoneLabel": "Téléphone",
-    "infoPhoneValue": "06 64 27 01 93",
-    "infoSiretLabel": "Siret",
-    "infoSiretValue": "399 592 058 R.C.S."
+    "infoPhoneValue": "06 64 27 01 93"
   },
   "footer": {
-    "copyright": "© 2026 SNAAC Group - Centrale d'achats nouvelle génération pour TPE/PME. Tous droits réservés."
+    "copyright": "© 2026 SNAAC Group - Centrale d'achats nouvelle génération pour TPE/PME. Tous droits réservés. | SIRET : 399 592 058 R.C.S."
   }
 }

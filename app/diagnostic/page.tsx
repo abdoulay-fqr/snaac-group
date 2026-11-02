@@ -1,42 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 // Import de type uniquement : les coefficients de la methodologie restent cote serveur.
 import type { SNAAC_METHODOLOGY } from "@/lib/snaac-methodology";
+import { DEPARTMENTS } from "./departments";
+import type { Analysis } from "./DiagnosticReport";
+import DiagnosticResults, { type CallbackStatus } from "./DiagnosticResults";
 
 type PostName = keyof typeof SNAAC_METHODOLOGY.posts;
-
-type AnalysisItem = {
-  post: string;
-  annual: number;
-  ratio: number;
-  mastery: number | null;
-  savings: number;
-};
-
-type Analysis = {
-  ok: true;
-  methodVersion: string;
-  score: number | null;
-  label: string;
-  scoreClass: string;
-  interpretation: string;
-  items: AnalysisItem[];
-  savings: { annual: number; low: number; mid: number; high: number };
-};
-
 type AnalysisStatus = "idle" | "loading" | "success" | "error";
-type CallbackStatus = "idle" | "sending" | "success" | "error";
 
 const STEPS = [
-  "Entreprise",
-  "Charges générales",
-  "Achats",
-  "Postes à analyser",
-  "Contact",
-  "Résultats",
+  "Votre entreprise",
+  "Vos principaux postes de charges",
+  "Achats et restauration",
+  "Votre situation fournisseur",
+  "Les postes à analyser",
+  "Pour recevoir votre diagnostic",
 ];
+const RESULTS_STEP = STEPS.length;
 
 const ACTIVITIES = [
   "Kebab",
@@ -49,124 +33,7 @@ const ACTIVITIES = [
   "Autre TPE/PME",
 ];
 
-const POSTS: PostName[] = [
-  "Achats alimentaires",
-  "Boissons",
-  "Énergie",
-  "Télécom",
-  "Internet",
-  "Assurance",
-  "Fournitures",
-  "Véhicules",
-  "Mutuelle / prévoyance",
-  "RH / services externalisés",
-  "Emballages",
-];
-
-const DEPARTMENTS = [
-  "01 - Ain",
-  "02 - Aisne",
-  "03 - Allier",
-  "04 - Alpes-de-Haute-Provence",
-  "05 - Hautes-Alpes",
-  "06 - Alpes-Maritimes",
-  "07 - Ardèche",
-  "08 - Ardennes",
-  "09 - Ariège",
-  "10 - Aube",
-  "11 - Aude",
-  "12 - Aveyron",
-  "13 - Bouches-du-Rhône",
-  "14 - Calvados",
-  "15 - Cantal",
-  "16 - Charente",
-  "17 - Charente-Maritime",
-  "18 - Cher",
-  "19 - Corrèze",
-  "2A - Corse-du-Sud",
-  "2B - Haute-Corse",
-  "21 - Côte-d'Or",
-  "22 - Côtes-d'Armor",
-  "23 - Creuse",
-  "24 - Dordogne",
-  "25 - Doubs",
-  "26 - Drôme",
-  "27 - Eure",
-  "28 - Eure-et-Loir",
-  "29 - Finistère",
-  "30 - Gard",
-  "31 - Haute-Garonne",
-  "32 - Gers",
-  "33 - Gironde",
-  "34 - Hérault",
-  "35 - Ille-et-Vilaine",
-  "36 - Indre",
-  "37 - Indre-et-Loire",
-  "38 - Isère",
-  "39 - Jura",
-  "40 - Landes",
-  "41 - Loir-et-Cher",
-  "42 - Loire",
-  "43 - Haute-Loire",
-  "44 - Loire-Atlantique",
-  "45 - Loiret",
-  "46 - Lot",
-  "47 - Lot-et-Garonne",
-  "48 - Lozère",
-  "49 - Maine-et-Loire",
-  "50 - Manche",
-  "51 - Marne",
-  "52 - Haute-Marne",
-  "53 - Mayenne",
-  "54 - Meurthe-et-Moselle",
-  "55 - Meuse",
-  "56 - Morbihan",
-  "57 - Moselle",
-  "58 - Nièvre",
-  "59 - Nord",
-  "60 - Oise",
-  "61 - Orne",
-  "62 - Pas-de-Calais",
-  "63 - Puy-de-Dôme",
-  "64 - Pyrénées-Atlantiques",
-  "65 - Hautes-Pyrénées",
-  "66 - Pyrénées-Orientales",
-  "67 - Bas-Rhin",
-  "68 - Haut-Rhin",
-  "69 - Rhône",
-  "70 - Haute-Saône",
-  "71 - Saône-et-Loire",
-  "72 - Sarthe",
-  "73 - Savoie",
-  "74 - Haute-Savoie",
-  "75 - Paris",
-  "76 - Seine-Maritime",
-  "77 - Seine-et-Marne",
-  "78 - Yvelines",
-  "79 - Deux-Sèvres",
-  "80 - Somme",
-  "81 - Tarn",
-  "82 - Tarn-et-Garonne",
-  "83 - Var",
-  "84 - Vaucluse",
-  "85 - Vendée",
-  "86 - Vienne",
-  "87 - Haute-Vienne",
-  "88 - Vosges",
-  "89 - Yonne",
-  "90 - Territoire de Belfort",
-  "91 - Essonne",
-  "92 - Hauts-de-Seine",
-  "93 - Seine-Saint-Denis",
-  "94 - Val-de-Marne",
-  "95 - Val-d'Oise",
-  "971 - Guadeloupe",
-  "972 - Martinique",
-  "973 - Guyane",
-  "974 - La Réunion",
-  "976 - Mayotte",
-];
-
+// Les libelles sont les noms de postes attendus par /api/analyze.
 const GENERAL_CHARGES = [
   { name: "energy", label: "Énergie" },
   { name: "telecom", label: "Télécom" },
@@ -184,13 +51,26 @@ const PURCHASES = [
   { name: "pack", label: "Emballages" },
 ] as const;
 
-const SCORE_COLORS: Record<string, string> = {
-  high: "#16a34a",
-  good: "#ca8a04",
-  medium: "#ea580c",
-  low: "#dc2626",
-  unknown: "var(--text-muted)",
-};
+const AMOUNT_FIELDS = [...PURCHASES, ...GENERAL_CHARGES];
+const POSTS = AMOUNT_FIELDS.map(({ label }) => label as PostName);
+
+const SUPPLIER_QUESTIONS = [
+  { name: "compare", label: "Comparez-vous les prix régulièrement ?", options: ["Jamais", "Rarement", "Parfois", "Oui, systématiquement"] },
+  { name: "negotiate", label: "Renégociez-vous vos contrats ?", options: ["Jamais", "Rarement", "À l'occasion", "Oui, au moins une fois par an"] },
+  { name: "satisfaction", label: "Êtes-vous satisfait de vos tarifs actuels ?", options: ["Non", "Oui"] },
+] as const;
+
+const NO_CASH_CARRY = "Aucun";
+const OTHER_CASH_CARRY = "Autre";
+const CASH_CARRIES = ["METRO", "Promocash", "Transgourmet", "Sysco / Brake", OTHER_CASH_CARRY, NO_CASH_CARRY];
+
+const HOW_FOUND_OPTIONS = [
+  "Recherche internet",
+  "Bouche à oreille",
+  "Réseaux sociaux",
+  "Recommandation d'un proche",
+  "Autre",
+];
 
 const INITIAL_FORM = {
   company: "",
@@ -209,41 +89,36 @@ const INITIAL_FORM = {
   food: "",
   drinks: "",
   pack: "",
+  suppliers: "",
+  compare: "Jamais",
+  negotiate: "Jamais",
+  satisfaction: "Non",
+  cashOther: "",
+  cashMonthly: "",
   firstName: "",
   lastName: "",
   email: "",
   phone: "",
+  howFound: "",
   website: "",
 };
 
 type TextField = keyof typeof INITIAL_FORM;
 
-const inputClass = "w-full px-4 py-3 rounded text-sm border outline-none transition-colors duration-300";
-const inputStyle = {
-  backgroundColor: "var(--input-bg)",
-  borderColor: "var(--input-border)",
-  color: "var(--input-color)",
-};
-const primaryButtonClass = "bg-brand hover:bg-brand-hover text-white px-6 py-3 rounded font-semibold text-sm transition-colors duration-300 cursor-pointer disabled:opacity-50";
-const secondaryButtonClass = "px-6 py-3 rounded font-semibold text-sm border transition-colors duration-300 cursor-pointer hover:border-brand hover:text-brand";
-
-const euros = new Intl.NumberFormat("fr-FR", {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 0,
-});
-const percent = new Intl.NumberFormat("fr-FR", {
-  style: "percent",
-  maximumFractionDigits: 1,
-});
+const inputClass = "w-full px-3.5 py-3 rounded-lg border border-[#cbd5df] bg-white text-[15px] text-[#17212b] outline-none transition-colors duration-300 focus:border-brand";
+const primaryButtonClass = "bg-brand hover:bg-brand-hover text-white px-6 py-3 rounded-lg font-bold text-[15px] transition-colors duration-300 cursor-pointer disabled:opacity-50";
+const secondaryButtonClass = "bg-[#edf3f8] hover:bg-[#dfe8f0] text-[#102a43] px-6 py-3 rounded-lg font-bold text-[15px] transition-colors duration-300 cursor-pointer";
+const checkClass = "flex items-center gap-2.5 rounded-lg border border-[#dce3eb] bg-[#fbfcfe] p-3 text-sm text-[#17212b]";
+const checkboxClass = "w-4 h-4 accent-[var(--color-brand)]";
 
 export default function DiagnosticPage() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState(INITIAL_FORM);
+  const [cashCarriers, setCashCarriers] = useState<string[]>([]);
   const [target, setTarget] = useState<PostName[]>([]);
-  const [targetAll, setTargetAll] = useState(false);
+  const [targetAll, setTargetAll] = useState(true);
   const [callbackWanted, setCallbackWanted] = useState(false);
-  const [targetError, setTargetError] = useState(false);
+  const [targetError, setTargetError] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>("idle");
   const [callbackStatus, setCallbackStatus] = useState<CallbackStatus>("idle");
@@ -260,7 +135,7 @@ export default function DiagnosticPage() {
   };
 
   const togglePost = (post: PostName) => {
-    setTargetError(false);
+    setTargetError("");
     setTarget((current) =>
       current.includes(post)
         ? current.filter((name) => name !== post)
@@ -268,54 +143,88 @@ export default function DiagnosticPage() {
     );
   };
 
+  // "Aucun" exclut les autres choix, et inversement.
+  const toggleCashCarry = (option: string) => {
+    setCashCarriers((current) => {
+      if (current.includes(option)) return current.filter((name) => name !== option);
+      if (option === NO_CASH_CARRY) return [NO_CASH_CARRY];
+      return [...current.filter((name) => name !== NO_CASH_CARRY), option];
+    });
+  };
+
+  const buildPayload = () => ({ ...formData, cashCarriers, target, targetAll });
+
+  const submitDiagnostic = async (result: Analysis, wantsCallback: boolean) => {
+    const response = await fetch("/api/diagnostic/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...buildPayload(),
+        callbackWanted: wantsCallback,
+        diagnosticId: result.diagnosticId,
+        analysis: result,
+      }),
+    });
+    if (!response.ok) throw new Error(`Envoi en erreur (${response.status})`);
+  };
+
   const runAnalysis = async () => {
     setAnalysisStatus("loading");
-    setCallbackStatus("idle");
+    setCallbackStatus(callbackWanted ? "sending" : "idle");
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, target, targetAll, callbackWanted }),
+        body: JSON.stringify(buildPayload()),
       });
       if (!response.ok) throw new Error(`Analyse en erreur (${response.status})`);
-      setAnalysis((await response.json()) as Analysis);
+      const result = (await response.json()) as Analysis;
+      setAnalysis(result);
       setAnalysisStatus("success");
+
+      // Chaque diagnostic est enregistre, meme sans demande de rappel.
+      try {
+        await submitDiagnostic(result, callbackWanted);
+        if (callbackWanted) setCallbackStatus("success");
+      } catch (error) {
+        console.error("Diagnostic submit error:", error);
+        if (callbackWanted) setCallbackStatus("error");
+      }
     } catch (error) {
       console.error("Diagnostic analyze error:", error);
       setAnalysisStatus("error");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step === 3 && !targetAll && target.length === 0) {
-      setTargetError(true);
-      return;
-    }
-    goToStep(step + 1);
-    if (step === 4) runAnalysis();
-  };
-
   const requestCallback = async () => {
+    if (!analysis) return;
     setCallbackStatus("sending");
     try {
-      const response = await fetch("/api/diagnostic/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          target,
-          targetAll,
-          callbackWanted: true,
-          analysis,
-        }),
-      });
-      if (!response.ok) throw new Error(`Envoi en erreur (${response.status})`);
+      await submitDiagnostic(analysis, true);
       setCallbackStatus("success");
     } catch (error) {
       console.error("Diagnostic submit error:", error);
       setCallbackStatus("error");
     }
+  };
+
+  const hasAmountToAnalyze = () =>
+    AMOUNT_FIELDS.some(
+      ({ name, label }) => Number(formData[name]) > 0 && (targetAll || target.includes(label as PostName))
+    );
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step === 4 && !targetAll && target.length === 0) {
+      setTargetError("Sélectionnez au moins un poste à analyser.");
+      return;
+    }
+    if (step === 4 && !hasAmountToAnalyze()) {
+      setTargetError("Renseignez un montant pour au moins un des postes sélectionnés (étapes 2 et 3).");
+      return;
+    }
+    goToStep(step + 1);
+    if (step === RESULTS_STEP - 1) void runAnalysis();
   };
 
   const renderTextField = (
@@ -334,12 +243,11 @@ export default function DiagnosticPage() {
         value={formData[name]}
         onChange={handleChange}
         className={inputClass}
-        style={inputStyle}
       />
     </Field>
   );
 
-  const renderAmountField = (name: TextField, label: string) => (
+  const renderAmountField = (name: TextField, label: string, placeholder = "0") => (
     <Field key={name} label={`${label} (€ / mois)`} htmlFor={name}>
       <input
         id={name}
@@ -348,345 +256,317 @@ export default function DiagnosticPage() {
         min="0"
         step="any"
         inputMode="decimal"
-        placeholder="0"
+        placeholder={placeholder}
         value={formData[name]}
         onChange={handleChange}
         className={inputClass}
-        style={inputStyle}
       />
     </Field>
   );
 
   return (
-    <main className="min-h-screen pb-20">
-      <div className="max-w-3xl mx-auto px-4 md:px-6 py-10">
-        <Link href="/" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
-          ← Retour à l&apos;accueil
+    <div className="min-h-screen bg-[#f5f7fa] text-[#17212b]">
+      <header className="fixed inset-x-0 top-0 z-30 bg-[#1e2d4a] px-4 py-3 text-white shadow-md">
+        <Link href="/" className="mx-auto flex max-w-[1020px] items-center gap-3">
+          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white p-1">
+            <Image src="/logo_snaac.png" alt="" width={36} height={36} />
+          </span>
+          <span>
+            <span className="block text-xl font-bold leading-tight">SNAAC Group</span>
+            <span className="block text-xs text-white/80">Centrale d&apos;achats nouvelle génération pour TPE/PME</span>
+          </span>
         </Link>
+      </header>
 
-        <h1 className="text-3xl md:text-4xl font-bold mt-6 mb-3 leading-tight">
-          <span style={{ color: "var(--text-primary)" }}>Diagnostic </span>
-          <span className="text-brand">gratuit</span>
-        </h1>
-        <p className="text-base mb-8" style={{ color: "var(--text-secondary)" }}>
-          Évaluez la maîtrise de vos charges et estimez vos économies potentielles.
-        </p>
+      <main className="mx-auto max-w-[1020px] px-4 pt-24 pb-4">
+        {step < RESULTS_STEP ? (
+          <>
+            <section className="pt-6 pb-2">
+              <h1 className="text-3xl md:text-4xl font-bold leading-tight text-[#102a43]">
+                Découvrez votre <span className="text-brand">potentiel d’optimisation</span>.
+              </h1>
+              <p className="mt-2 text-xl font-bold text-[#102a43]">« Seul, on est fort. Mais ensemble, on gagne de l&apos;argent ! »</p>
+              <p className="mt-2 max-w-3xl text-[17px] leading-normal text-[#65758b]">
+                Répondez à quelques questions et obtenez une première lecture personnalisée de vos principaux leviers d’optimisation.
+              </p>
+            </section>
 
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm font-semibold mb-2">
-            <span style={{ color: "var(--text-primary)" }}>{STEPS[step]}</span>
-            <span style={{ color: "var(--text-secondary)" }}>
-              Étape {step + 1} sur {STEPS.length}
-            </span>
-          </div>
-          <div
-            role="progressbar"
-            aria-label="Progression du diagnostic"
-            aria-valuemin={1}
-            aria-valuemax={STEPS.length}
-            aria-valuenow={step + 1}
-            className="h-2 rounded-full overflow-hidden"
-            style={{ backgroundColor: "var(--border-color)" }}
-          >
-            <div
-              className="h-full bg-brand transition-all duration-300"
-              style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        <div
-          className="rounded-2xl p-6 md:p-10 shadow-sm"
-          style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)" }}
-        >
-          {step < 5 ? (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {/* Honeypot */}
-              <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-                <label htmlFor="website">Site web</label>
-                <input
-                  id="website"
-                  type="text"
-                  name="website"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={formData.website}
-                  onChange={handleChange}
+            <section className="my-5 rounded-2xl border border-[#dce3eb] bg-white p-6 md:p-8 shadow-[0_5px_18px_#102a4310]">
+              <div
+                role="progressbar"
+                aria-label="Progression du diagnostic"
+                aria-valuemin={1}
+                aria-valuemax={STEPS.length}
+                aria-valuenow={step + 1}
+                className="h-2 overflow-hidden rounded-full bg-[#e7edf3]"
+              >
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-brand to-[#1677ff] transition-all duration-300"
+                  style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
                 />
               </div>
+              <div className="mt-2 mb-5 flex justify-between gap-4 text-xs text-[#65758b]">
+                <span>{STEPS[step]}</span>
+                <span className="whitespace-nowrap font-semibold">Étape {step + 1} sur {STEPS.length}</span>
+              </div>
 
-              {step === 0 && (
-                <>
-                  <StepTitle>Informations sur votre entreprise</StepTitle>
-                  {renderTextField("company", "Nom de l'entreprise", "text", "organization")}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <Field label="Activité" htmlFor="activity" required>
-                      <select id="activity" name="activity" required value={formData.activity} onChange={handleChange} className={inputClass} style={inputStyle}>
-                        <option value="">Sélectionnez une activité</option>
-                        {ACTIVITIES.map((activity) => (
-                          <option key={activity} value={activity}>{activity}</option>
-                        ))}
-                      </select>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {/* Honeypot */}
+                <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                  <label htmlFor="website">Site web</label>
+                  <input
+                    id="website"
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={formData.website}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {step === 0 && (
+                  <>
+                    <StepTitle subtitle="Commençons par quelques informations simples sur votre activité.">1. Votre entreprise</StepTitle>
+                    {renderTextField("company", "Nom de l'entreprise", "text", "organization")}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Field label="Votre activité" htmlFor="activity" required>
+                        <select id="activity" name="activity" required value={formData.activity} onChange={handleChange} className={inputClass}>
+                          <option value="">Sélectionnez votre activité</option>
+                          {ACTIVITIES.map((activity) => (
+                            <option key={activity} value={activity}>{activity}</option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Département" htmlFor="department" required>
+                        <select id="department" name="department" required value={formData.department} onChange={handleChange} className={inputClass}>
+                          <option value="">Sélectionnez votre département</option>
+                          {DEPARTMENTS.map((department) => (
+                            <option key={department} value={department}>{department}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                    {renderTextField("city", "Ville", "text", "address-level2")}
+                    <Field label="Chiffre d'affaires annuel approximatif (€)" htmlFor="ca" required>
+                      <input
+                        id="ca"
+                        type="number"
+                        name="ca"
+                        required
+                        min="1"
+                        step="any"
+                        inputMode="decimal"
+                        value={formData.ca}
+                        onChange={handleChange}
+                        className={inputClass}
+                      />
                     </Field>
-                    <Field label="Département" htmlFor="department" required>
-                      <select id="department" name="department" required value={formData.department} onChange={handleChange} className={inputClass} style={inputStyle}>
-                        <option value="">Sélectionnez un département</option>
-                        {DEPARTMENTS.map((department) => (
-                          <option key={department} value={department}>{department}</option>
+                  </>
+                )}
+
+                {step === 1 && (
+                  <>
+                    <StepTitle subtitle="Indiquez vos dépenses approximatives par mois. Vous n’avez pas besoin de faire le calcul à l’année.">
+                      2. Vos principaux postes de charges
+                    </StepTitle>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {GENERAL_CHARGES.map(({ name, label }) => renderAmountField(name, label))}
+                    </div>
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <StepTitle subtitle="Si vous êtes concerné, renseignez vos achats. Sinon laissez les champs à 0.">
+                      3. Achats et restauration
+                    </StepTitle>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {PURCHASES.map(({ name, label }) => renderAmountField(name, label))}
+                    </div>
+                  </>
+                )}
+
+                {step === 3 && (
+                  <>
+                    <StepTitle subtitle="SNAAC agit notamment sur les tarifs négociés, la mise en concurrence et l'accompagnement personnalisé.">
+                      4. Votre situation fournisseur
+                    </StepTitle>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Field label="Combien de fournisseurs principaux avez-vous ?" htmlFor="suppliers">
+                        <input id="suppliers" type="number" name="suppliers" min="0" inputMode="numeric" value={formData.suppliers} onChange={handleChange} className={inputClass} />
+                      </Field>
+                      {SUPPLIER_QUESTIONS.map(({ name, label, options }) => (
+                        <Field key={name} label={label} htmlFor={name}>
+                          <select id={name} name={name} value={formData[name]} onChange={handleChange} className={inputClass}>
+                            {options.map((option) => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        </Field>
+                      ))}
+                    </div>
+                    <fieldset>
+                      <legend className="mb-2 text-sm font-bold text-[#17212b]">Chez quel(s) Cash &amp; Carry vous approvisionnez-vous ?</legend>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {CASH_CARRIES.map((option) => (
+                          <label key={option} className={`${checkClass} cursor-pointer`}>
+                            <input
+                              type="checkbox"
+                              checked={cashCarriers.includes(option)}
+                              onChange={() => toggleCashCarry(option)}
+                              className={checkboxClass}
+                            />
+                            {option}
+                          </label>
                         ))}
-                      </select>
-                    </Field>
-                  </div>
-                  {renderTextField("city", "Ville", "text", "address-level2")}
-                  <Field label="Chiffre d'affaires annuel (€)" htmlFor="ca" required>
-                    <input
-                      id="ca"
-                      type="number"
-                      name="ca"
-                      required
-                      min="1"
-                      step="any"
-                      inputMode="decimal"
-                      value={formData.ca}
-                      onChange={handleChange}
-                      className={inputClass}
-                      style={inputStyle}
-                    />
-                  </Field>
-                </>
-              )}
+                      </div>
+                    </fieldset>
+                    {cashCarriers.includes(OTHER_CASH_CARRY) && (
+                      <input
+                        type="text"
+                        name="cashOther"
+                        aria-label="Précisez le nom du fournisseur"
+                        placeholder="Précisez le nom du fournisseur"
+                        value={formData.cashOther}
+                        onChange={handleChange}
+                        className={inputClass}
+                      />
+                    )}
+                    {renderAmountField("cashMonthly", "Dépenses réalisées via ces Cash & Carry", "Ex. 2 500")}
+                  </>
+                )}
 
-              {step === 1 && (
-                <>
-                  <StepTitle>Vos charges générales mensuelles</StepTitle>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {GENERAL_CHARGES.map(({ name, label }) => renderAmountField(name, label))}
-                  </div>
-                </>
-              )}
-
-              {step === 2 && (
-                <>
-                  <StepTitle>Vos achats et la restauration</StepTitle>
-                  <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                    Laissez à 0 si non concerné.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {PURCHASES.map(({ name, label }) => renderAmountField(name, label))}
-                  </div>
-                </>
-              )}
-
-              {step === 3 && (
-                <>
-                  <StepTitle>Les postes à analyser</StepTitle>
-                  <label className="flex items-center gap-3 text-sm font-semibold cursor-pointer" style={{ color: "var(--text-primary)" }}>
-                    <input
-                      type="checkbox"
-                      checked={targetAll}
-                      onChange={(e) => {
-                        setTargetError(false);
-                        setTargetAll(e.target.checked);
-                      }}
-                      className="w-4 h-4 accent-[var(--color-brand)]"
-                    />
-                    Tous les postes
-                  </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {POSTS.map((post) => (
-                      <label
-                        key={post}
-                        className={`flex items-center gap-3 text-sm ${targetAll ? "opacity-60" : "cursor-pointer"}`}
-                        style={{ color: "var(--text-secondary)" }}
-                      >
+                {step === 4 && (
+                  <>
+                    <StepTitle subtitle="Sélectionnez un ou plusieurs postes, ou choisissez l’analyse complète.">
+                      5. Quels postes souhaitez-vous analyser ?
+                    </StepTitle>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      <label className={`${checkClass} md:col-span-2 cursor-pointer border-[#b9d7ef] bg-[#eef5fb] font-bold`}>
                         <input
                           type="checkbox"
-                          checked={targetAll || target.includes(post)}
-                          disabled={targetAll}
-                          onChange={() => togglePost(post)}
-                          className="w-4 h-4 accent-[var(--color-brand)]"
+                          checked={targetAll}
+                          onChange={(e) => {
+                            setTargetError("");
+                            setTargetAll(e.target.checked);
+                          }}
+                          className={checkboxClass}
                         />
-                        {post}
+                        Tous les postes de dépenses
                       </label>
-                    ))}
-                  </div>
-                  {targetError && (
-                    <p role="alert" className="text-sm font-semibold text-red-600">
-                      Sélectionnez au moins un poste à analyser.
-                    </p>
-                  )}
-                </>
-              )}
-
-              {step === 4 && (
-                <>
-                  <StepTitle>Vos coordonnées</StepTitle>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {renderTextField("firstName", "Prénom", "text", "given-name")}
-                    {renderTextField("lastName", "Nom", "text", "family-name")}
-                    {renderTextField("email", "Email", "email", "email")}
-                    {renderTextField("phone", "Téléphone", "tel", "tel")}
-                  </div>
-                  <label className="flex items-center gap-3 text-sm cursor-pointer" style={{ color: "var(--text-secondary)" }}>
-                    <input
-                      type="checkbox"
-                      checked={callbackWanted}
-                      onChange={(e) => setCallbackWanted(e.target.checked)}
-                      className="w-4 h-4 accent-[var(--color-brand)]"
-                    />
-                    Je souhaite être rappelé par SNAAC
-                  </label>
-                </>
-              )}
-
-              <div className="flex justify-between gap-4 mt-3">
-                {step > 0 ? (
-                  <button type="button" onClick={() => goToStep(step - 1)} className={secondaryButtonClass} style={{ borderColor: "var(--border-color)" }}>
-                    Précédent
-                  </button>
-                ) : (
-                  <span />
+                      {POSTS.map((post) => (
+                        <label key={post} className={`${checkClass} ${targetAll ? "opacity-60" : "cursor-pointer"}`}>
+                          <input
+                            type="checkbox"
+                            checked={targetAll || target.includes(post)}
+                            disabled={targetAll}
+                            onChange={() => togglePost(post)}
+                            className={checkboxClass}
+                          />
+                          {post}
+                        </label>
+                      ))}
+                    </div>
+                    {targetError && (
+                      <p role="alert" className="text-sm font-semibold text-red-600">{targetError}</p>
+                    )}
+                  </>
                 )}
-                <button type="submit" className={primaryButtonClass}>
-                  {step === 4 ? "Voir mes résultats" : "Suivant"}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="flex flex-col gap-8">
-              {analysisStatus === "loading" && (
-                <p role="status" className="text-center text-sm py-10" style={{ color: "var(--text-secondary)" }}>
-                  Analyse de vos données en cours...
-                </p>
-              )}
 
-              {analysisStatus === "error" && (
-                <div role="alert" className="text-center py-6">
-                  <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
-                    Une erreur est survenue pendant l&apos;analyse. Veuillez réessayer.
-                  </p>
-                  <button type="button" onClick={runAnalysis} className={primaryButtonClass}>
-                    Réessayer
+                {step === 5 && (
+                  <>
+                    <StepTitle subtitle="Ces coordonnées permettent à SNAAC de vous recontacter si vous souhaitez aller plus loin.">
+                      6. Pour recevoir votre diagnostic
+                    </StepTitle>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {renderTextField("firstName", "Prénom", "text", "given-name")}
+                      {renderTextField("lastName", "Nom", "text", "family-name")}
+                      {renderTextField("email", "Email professionnel", "email", "email")}
+                      {renderTextField("phone", "Téléphone", "tel", "tel")}
+                    </div>
+                    <Field label="Comment avez-vous connu SNAAC ?" htmlFor="howFound" required>
+                      <select id="howFound" name="howFound" required value={formData.howFound} onChange={handleChange} className={inputClass}>
+                        <option value="">Sélectionnez une réponse</option>
+                        {HOW_FOUND_OPTIONS.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <label className="flex items-center gap-4 rounded-lg border-2 border-brand bg-brand/5 p-4 text-lg font-semibold text-[#102a43] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={callbackWanted}
+                        onChange={(e) => setCallbackWanted(e.target.checked)}
+                        className="w-6 h-6 shrink-0 accent-[var(--color-brand)]"
+                      />
+                      Je souhaite être rappelé par SNAAC
+                    </label>
+                    <p className="text-xs text-[#65758b]">
+                      Vos coordonnées sont nécessaires pour vous transmettre votre diagnostic. Un contrôle technique du format de l’e-mail et du téléphone est effectué ; aucun e-mail ou SMS de confirmation n’est envoyé.
+                    </p>
+                  </>
+                )}
+
+                <div className="mt-2 flex flex-wrap gap-2.5">
+                  {step > 0 && (
+                    <button type="button" onClick={() => goToStep(step - 1)} className={secondaryButtonClass}>
+                      Retour
+                    </button>
+                  )}
+                  <button type="submit" className={primaryButtonClass}>
+                    {step === RESULTS_STEP - 1 ? "Voir mon diagnostic" : "Continuer"}
                   </button>
                 </div>
-              )}
+              </form>
+            </section>
+          </>
+        ) : (
+          <div className="py-5">
+            {analysisStatus === "loading" && (
+              <p role="status" className="rounded-2xl border border-[#dce3eb] bg-white py-16 text-center text-sm text-[#65758b]">
+                Analyse de vos données en cours...
+              </p>
+            )}
 
-              {analysisStatus === "success" && analysis && (
-                <>
-                  <div className="text-center">
-                    <p
-                      className="text-7xl font-bold leading-none mb-3"
-                      style={{ color: SCORE_COLORS[analysis.scoreClass] }}
-                    >
-                      {analysis.score ?? "—"}
-                      {analysis.score !== null && <span className="text-2xl"> / 100</span>}
-                    </p>
-                    <p className="text-lg font-semibold" style={{ color: SCORE_COLORS[analysis.scoreClass] }}>
-                      {analysis.label}
-                    </p>
-                  </div>
+            {analysisStatus === "error" && (
+              <div role="alert" className="rounded-2xl border border-[#dce3eb] bg-white py-10 text-center">
+                <p className="mb-6 text-sm text-[#65758b]">
+                  Une erreur est survenue pendant l&apos;analyse. Veuillez réessayer.
+                </p>
+                <button type="button" onClick={() => void runAnalysis()} className={primaryButtonClass}>
+                  Réessayer
+                </button>
+              </div>
+            )}
 
-                  <div>
-                    <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-                      Économies annuelles estimées
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Saving label="Prudente" amount={analysis.savings.low} />
-                      <Saving label="Médiane" amount={analysis.savings.mid} highlighted />
-                      <Saving label="Haute" amount={analysis.savings.high} />
-                    </div>
-                  </div>
+            {analysisStatus === "success" && analysis && (
+              <DiagnosticResults
+                analysis={analysis}
+                activity={formData.activity}
+                firstName={formData.firstName}
+                location={formData.city || formData.department}
+                callbackStatus={callbackStatus}
+                onRequestCallback={() => void requestCallback()}
+              />
+            )}
+          </div>
+        )}
+      </main>
 
-                  {analysis.items.length > 0 && (
-                    <div>
-                      <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-                        Détail par poste
-                      </h2>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                          <thead>
-                            <tr style={{ color: "var(--text-secondary)", borderBottom: "1px solid var(--border-color)" }}>
-                              <th scope="col" className="py-2 pr-4 font-semibold">Poste</th>
-                              <th scope="col" className="py-2 pr-4 font-semibold text-right whitespace-nowrap">Dépense / an</th>
-                              <th scope="col" className="py-2 pr-4 font-semibold text-right whitespace-nowrap">% du CA</th>
-                              <th scope="col" className="py-2 pr-4 font-semibold text-right">Maîtrise</th>
-                              <th scope="col" className="py-2 font-semibold text-right whitespace-nowrap">Économie / an</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {analysis.items.map((item) => (
-                              <tr key={item.post} style={{ color: "var(--text-primary)", borderBottom: "1px solid var(--border-color)" }}>
-                                <td className="py-2 pr-4">{item.post}</td>
-                                <td className="py-2 pr-4 text-right whitespace-nowrap">{euros.format(item.annual)}</td>
-                                <td className="py-2 pr-4 text-right">{percent.format(item.ratio)}</td>
-                                <td className="py-2 pr-4 text-right whitespace-nowrap">
-                                  {item.mastery === null ? "—" : `${Math.round(item.mastery)} / 100`}
-                                </td>
-                                <td className="py-2 text-right whitespace-nowrap">{euros.format(item.savings)}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-                      Interprétation
-                    </h2>
-                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                      {analysis.interpretation}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap justify-between gap-4">
-                    <button type="button" onClick={() => goToStep(4)} className={secondaryButtonClass} style={{ borderColor: "var(--border-color)" }}>
-                      Modifier mes réponses
-                    </button>
-                    {callbackStatus !== "success" && (
-                      <button
-                        type="button"
-                        onClick={requestCallback}
-                        disabled={callbackStatus === "sending"}
-                        className={primaryButtonClass}
-                      >
-                        {callbackStatus === "sending" ? "Envoi en cours..." : "Être rappelé par SNAAC"}
-                      </button>
-                    )}
-                  </div>
-
-                  {callbackStatus === "success" && (
-                    <p role="status" className="text-sm font-semibold text-green-600">
-                      Merci, votre demande a bien été envoyée. Notre équipe vous rappellera dans les plus brefs délais.
-                    </p>
-                  )}
-                  {callbackStatus === "error" && (
-                    <p role="alert" className="text-sm font-semibold text-red-600">
-                      L&apos;envoi a échoué. Veuillez réessayer ou nous écrire via le{" "}
-                      <Link href="/#contact" className="underline">formulaire de contact</Link>.
-                    </p>
-                  )}
-
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                    Méthode {analysis.methodVersion}
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </main>
+      <footer className="mx-auto max-w-[1020px] px-4 pt-2 pb-10 text-center text-xs text-[#65758b]">
+        SNAAC Group — Centrale d&apos;achats nouvelle génération pour TPE/PME. Diagnostic indicatif : les estimations présentées sont à confirmer par l’analyse des factures, contrats, volumes et conditions fournisseurs.
+      </footer>
+    </div>
   );
 }
 
-function StepTitle({ children }: { children: React.ReactNode }) {
+function StepTitle({ subtitle, children }: { subtitle: string; children: React.ReactNode }) {
   return (
-    <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-      {children}
-    </h2>
+    <div>
+      <h2 className="text-xl font-bold text-[#102a43]">{children}</h2>
+      <p className="mt-1 text-[15px] leading-normal text-[#65758b]">{subtitle}</p>
+    </div>
   );
 }
 
@@ -703,36 +583,11 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
+      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-bold text-[#17212b]">
         {label}
         {required && <span className="text-brand"> *</span>}
       </label>
       {children}
-    </div>
-  );
-}
-
-function Saving({
-  label,
-  amount,
-  highlighted = false,
-}: {
-  label: string;
-  amount: number;
-  highlighted?: boolean;
-}) {
-  return (
-    <div
-      className="rounded-xl p-5 text-center"
-      style={{
-        backgroundColor: "var(--bg-card-alt)",
-        border: `1px solid ${highlighted ? "var(--color-brand)" : "var(--border-color)"}`,
-      }}
-    >
-      <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>{label}</p>
-      <p className={`text-2xl font-bold ${highlighted ? "text-brand" : ""}`} style={highlighted ? undefined : { color: "var(--text-primary)" }}>
-        {euros.format(amount)}
-      </p>
     </div>
   );
 }

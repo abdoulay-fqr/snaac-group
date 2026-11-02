@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { SNAAC_METHODOLOGY } from "@/lib/snaac-methodology";
 
@@ -23,33 +24,33 @@ function describeScore(score: number | null) {
   }
   if (score >= 90) {
     return {
-      label: "🟢 Maîtrise élevée",
+      label: "Excellente maîtrise",
       scoreClass: "high",
       interpretation:
-        "Vos charges sont globalement bien maîtrisées au regard des références SNAAC. Quelques ajustements ciblés peuvent rester possibles.",
+        "Votre niveau de maîtrise est élevé. Une analyse détaillée peut néanmoins permettre d’identifier des économies complémentaires et de vérifier vos conditions d’achat.",
     };
   }
   if (score >= 70) {
     return {
-      label: "🟡 Potentiel d'optimisation encore présent",
+      label: "Bonne maîtrise",
       scoreClass: "good",
       interpretation:
-        "Vos charges sont plutôt maîtrisées, mais certains postes dépassent les références SNAAC et peuvent encore être optimisés.",
+        "Votre niveau de maîtrise est favorable, mais plusieurs leviers peuvent encore être analysés afin d’identifier les économies réellement accessibles.",
     };
   }
-  if (score >= 50) {
+  if (score >= 40) {
     return {
-      label: "🟠 Potentiel d'optimisation identifié",
+      label: "Potentiel d’optimisation identifié",
       scoreClass: "medium",
       interpretation:
-        "Plusieurs postes se situent au-dessus des références SNAAC. Une renégociation ciblée permettrait de réduire vos charges.",
+        "Votre diagnostic fait ressortir un potentiel d’optimisation identifié. L’analyse de vos achats et contrats permettra de préciser les économies réellement accessibles.",
     };
   }
   return {
-    label: "🔴 Potentiel d'optimisation significatif",
+    label: "Optimisation urgente",
     scoreClass: "low",
     interpretation:
-      "Une part importante de vos charges dépasse les références SNAAC. Une analyse détaillée de vos contrats et de vos achats est recommandée.",
+      "Votre diagnostic fait ressortir un potentiel d’optimisation significatif. Une analyse détaillée permettra d’identifier les principaux leviers et de vérifier les économies réellement accessibles.",
   };
 }
 
@@ -114,6 +115,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    diagnosticId: randomUUID(),
     methodVersion: SNAAC_METHODOLOGY.version,
     score,
     ...describeScore(score),
