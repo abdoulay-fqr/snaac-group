@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
@@ -75,6 +76,11 @@ export default function AdminLoginPage() {
             {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
+        <p className="mt-4 text-center">
+          <Link href="/admin/forgot-password" className="text-sm font-medium text-gray-700 hover:text-black underline">
+            Mot de passe oublié ?
+          </Link>
+        </p>
       </div>
     </main>
   );

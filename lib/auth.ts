@@ -112,6 +112,11 @@ export async function saveAdminPassword(password: string) {
     .onConflictDoUpdate({ target: adminConfig.id, set: { value, updatedAt } });
 }
 
+// Seule cette empreinte est stockee : une fuite de la base ne donne aucun lien utilisable.
+export function hashResetToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 export async function loginAdmin(username: string, password: string) {
   const credentials = getCredentials();
   if (username !== credentials.username) {
