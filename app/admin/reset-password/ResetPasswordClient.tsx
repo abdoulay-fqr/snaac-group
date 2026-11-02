@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import PasswordInput from "../PasswordInput";
 
 const MIN_PASSWORD_LENGTH = 12;
 
@@ -79,9 +80,8 @@ export default function ResetPasswordClient({ token }: { token: string }) {
                   <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
                     {label}
                   </label>
-                  <input
+                  <PasswordInput
                     id={name}
-                    type="password"
                     autoComplete="new-password"
                     minLength={MIN_PASSWORD_LENGTH}
                     value={form[name]}

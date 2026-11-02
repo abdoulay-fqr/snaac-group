@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PasswordInput from "../PasswordInput";
 
 const MIN_PASSWORD_LENGTH = 12;
 
@@ -96,9 +97,8 @@ export default function SettingsClient() {
               <label htmlFor={name} className="block text-sm font-semibold mb-2" style={{ color: "var(--text-secondary)" }}>
                 {label}
               </label>
-              <input
+              <PasswordInput
                 id={name}
-                type="password"
                 required
                 minLength={name === "currentPassword" ? undefined : MIN_PASSWORD_LENGTH}
                 autoComplete={autoComplete}
