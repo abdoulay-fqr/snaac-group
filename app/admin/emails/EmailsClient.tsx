@@ -68,10 +68,13 @@ type MessageState = { uid: number; body?: EmailBody; error?: string };
 type ReadFilter = "all" | "unread" | "read";
 type Notice = { kind: "success" | "error"; text: string };
 
+// lib/email-accounts est server-only : satisfies garde ce nom aligne sur le serveur.
+const SENT_FOLDER = "INBOX.INBOX.Sent" satisfies EmailFolder;
+
 const FOLDERS = [
   { id: "INBOX", label: "Boîte de réception", Icon: Inbox },
-  { id: "Sent", label: "Envoyés", Icon: Send },
-  { id: "Junk", label: "Spam", Icon: AlertTriangle },
+  { id: SENT_FOLDER, label: "Envoyés", Icon: Send },
+  { id: "INBOX.INBOX.Junk", label: "Spam", Icon: AlertTriangle },
 ] as const;
 
 const READ_FILTERS: { id: ReadFilter; label: string }[] = [
@@ -145,7 +148,7 @@ function addresses(list: (Address | null | undefined)[]) {
 
 function buildReply(body: EmailBody, folder: EmailFolder): ComposeDraft {
   // Dans "Envoyes", l'expediteur est la boite elle-meme : on repond au destinataire.
-  const recipients = folder === "Sent" ? body.to : [body.replyTo ?? body.from];
+  const recipients = folder === SENT_FOLDER ? body.to : [body.replyTo ?? body.from];
   const author = escapeHtml(formatAddress(body.from));
   return {
     title: `Répondre à ${displayName(recipients[0])}`,
@@ -368,7 +371,7 @@ export default function EmailsClient({ accounts, maxAttachmentBytes }: EmailsCli
       body: JSON.stringify({ account: account.id, ...email }),
     });
     setDraft(null);
-    if (folder === "Sent") setRefreshCount((count) => count + 1);
+    if (folder === SENT_FOLDER) setRefreshCount((count) => count + 1);
     setNotice(
       savedToSent
         ? { kind: "success", text: `Message envoyé depuis ${account.email}.` }
@@ -557,7 +560,7 @@ export default function EmailsClient({ accounts, maxAttachmentBytes }: EmailsCli
           ) : (
             <ul>
               {visibleEmails.map((email) => {
-                const contact = folder === "Sent" ? email.to : email.from;
+                const contact = folder === SENT_FOLDER ? email.to : email.from;
                 const name = displayName(contact);
                 const selected = message?.uid === email.uid;
                 return (
