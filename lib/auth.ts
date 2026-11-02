@@ -4,9 +4,15 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { adminConfig } from "@/lib/db/schema";
+import { AUTH_COOKIE, decodeSession, encodeSession, SESSION_MAX_AGE_SECONDS, type SessionPayload } from "@/lib/session";
 
-const AUTH_COOKIE = "snaac_admin_session";
-const SESSION_DURATION_MS = 1000 * 60 * 60 * 8;
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  path: "/",
+} as const;
+
 const ADMIN_PASSWORD_KEY = "admin_password";
 const PASSWORD_KEY_LENGTH = 64;
 
@@ -16,54 +22,11 @@ const scrypt = promisify(crypto.scrypt) as (
   keyLength: number
 ) => Promise<Buffer>;
 
-type SessionPayload = {
-  username: string;
-  exp: number;
-};
-
-function getSecret() {
-  return process.env.ADMIN_SECRET || "change-this-admin-secret-in-env";
-}
-
 function getCredentials() {
   return {
     username: process.env.ADMIN_USERNAME || "admin",
     password: process.env.ADMIN_PASSWORD || "admin123",
   };
-}
-
-function toBase64Url(value: string) {
-  return Buffer.from(value).toString("base64url");
-}
-
-function fromBase64Url<T>(value: string): T {
-  return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as T;
-}
-
-function sign(value: string) {
-  return crypto.createHmac("sha256", getSecret()).update(value).digest("base64url");
-}
-
-function encodeSession(payload: SessionPayload) {
-  const encodedPayload = toBase64Url(JSON.stringify(payload));
-  const signature = sign(encodedPayload);
-  return `${encodedPayload}.${signature}`;
-}
-
-function decodeSession(token: string): SessionPayload | null {
-  const [payload, signature] = token.split(".");
-  if (!payload || !signature) {
-    return null;
-  }
-  const expectedSignature = sign(payload);
-  if (signature !== expectedSignature) {
-    return null;
-  }
-  const parsed = fromBase64Url<SessionPayload>(payload);
-  if (!parsed.exp || parsed.exp < Date.now()) {
-    return null;
-  }
-  return parsed;
 }
 
 async function hashPassword(password: string) {
@@ -134,30 +97,18 @@ export async function loginAdmin(username: string, password: string) {
 
   const payload: SessionPayload = {
     username,
-    exp: Date.now() + SESSION_DURATION_MS,
+    exp: Date.now() + SESSION_MAX_AGE_SECONDS * 1000,
   };
 
   const store = await cookies();
-  store.set(AUTH_COOKIE, encodeSession(payload), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(payload.exp),
-  });
+  store.set(AUTH_COOKIE, await encodeSession(payload), { ...COOKIE_OPTIONS, maxAge: SESSION_MAX_AGE_SECONDS });
 
   return true;
 }
 
 export async function logoutAdmin() {
   const store = await cookies();
-  store.set(AUTH_COOKIE, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(0),
-  });
+  store.set(AUTH_COOKIE, "", { ...COOKIE_OPTIONS, maxAge: 0 });
 }
 
 export async function isAdminAuthenticated() {
@@ -166,5 +117,5 @@ export async function isAdminAuthenticated() {
   if (!token) {
     return false;
   }
-  return Boolean(decodeSession(token));
+  return Boolean(await decodeSession(token));
 }

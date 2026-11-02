@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { AUTH_COOKIE, decodeSession } from "@/lib/session";
 
-const AUTH_COOKIE = "snaac_admin_session";
 const PUBLIC_PATHS = new Set([
   "/admin/login",
   "/admin/forgot-password",
@@ -11,9 +11,12 @@ const PUBLIC_PATHS = new Set([
   "/api/admin/reset-password",
 ]);
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSession = Boolean(request.cookies.get(AUTH_COOKIE)?.value);
+  // Valider et non seulement lire le cookie : un cookie expire renverrait sinon
+  // de /admin/login vers /admin, puis de /admin vers /admin/login, sans fin.
+  const token = request.cookies.get(AUTH_COOKIE)?.value;
+  const hasSession = Boolean(token && (await decodeSession(token)));
 
   if (pathname.startsWith("/admin") && !PUBLIC_PATHS.has(pathname) && !hasSession) {
     const loginUrl = new URL("/admin/login", request.url);
