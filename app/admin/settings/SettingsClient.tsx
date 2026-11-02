@@ -74,7 +74,7 @@ export default function SettingsClient() {
   return (
     <main className="min-h-screen px-4 md:px-8 py-8">
       <div className="max-w-xl mx-auto">
-        <Link href="/admin" className="text-sm font-semibold text-brand hover:text-brand-hover transition-colors">
+        <Link href="/admin" className="inline-flex items-center gap-2 bg-[#1e2d4a] hover:bg-[#2a3d5e] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">
           ← Retour au back-office
         </Link>
 

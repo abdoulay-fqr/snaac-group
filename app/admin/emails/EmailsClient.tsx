@@ -452,7 +452,7 @@ export default function EmailsClient({ accounts, maxAttachmentBytes }: EmailsCli
         </nav>
 
         <div className="mt-auto flex flex-col gap-2 p-3">
-          <Link href="/admin" className="flex items-center gap-2 px-1 py-1 text-xs text-[#94a3b8] hover:text-white transition-colors">
+          <Link href="/admin" className="flex items-center gap-2 bg-[#1e2d4a] hover:bg-[#2a3d5e] text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors">
             <ArrowLeft size={14} />
             Back-office
           </Link>
