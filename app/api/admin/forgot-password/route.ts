@@ -58,10 +58,12 @@ async function sendResetLink(recipient: string) {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { email?: unknown } | null;
-  const recoveryEmail = process.env.ADMIN_RECOVERY_EMAIL?.trim();
+  // filter(Boolean) : une virgule en trop ne doit pas faire accepter un email vide.
+  const recoveryEmails = process.env.ADMIN_RECOVERY_EMAIL?.split(",").map(normalizeEmail).filter(Boolean) ?? [];
+  const recoveryEmail = recoveryEmails.find((email) => email === normalizeEmail(body?.email));
 
   // L'envoi part apres la reponse : son temps de reponse ne revele pas si l'email est le bon.
-  if (recoveryEmail && normalizeEmail(body?.email) === normalizeEmail(recoveryEmail)) {
+  if (recoveryEmail) {
     after(() => sendResetLink(recoveryEmail));
   }
 
