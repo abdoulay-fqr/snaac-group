@@ -70,7 +70,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Requête rejetée." }, { status: 400 });
   }
 
-  const ca = n(payload.ca);
+  // Le formulaire envoie un chiffre d'affaires mensuel ; les ratios se calculent a l'annee.
+  const ca = n(payload.ca) * 12;
   const activity = typeof payload.activity === "string" ? payload.activity.trim() : "";
   const selected = Array.isArray(payload.target) ? payload.target : [];
   const all = Boolean(payload.targetAll);

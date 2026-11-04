@@ -7,7 +7,8 @@ const diagnosticLinkClass = "inline-block bg-brand text-white px-8 py-4 rounded-
 
 export default function Hero({ content }: { content: LandingContent["hero"] }) {
   return (
-    <section id="accueil" className="py-20 md:py-28 text-left">
+    // Hauteur de l'ecran : le contenu est centre verticalement sous l'en-tete fixe.
+    <section id="accueil" className="flex min-h-svh flex-col justify-center pt-28 pb-16 text-left">
       <div className="mx-auto px-20">
         <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
           <span className="text-brand">
@@ -30,9 +31,11 @@ export default function Hero({ content }: { content: LandingContent["hero"] }) {
         >
           {content.description}
         </p>
-        <Link href="/diagnostic" className={diagnosticLinkClass}>
-          Je veux économiser sur mes charges →
-        </Link>
+        <div className="flex justify-center">
+          <Link href="/diagnostic" className={diagnosticLinkClass}>
+            Je veux économiser sur mes charges →
+          </Link>
+        </div>
       </div>
     </section>
   );

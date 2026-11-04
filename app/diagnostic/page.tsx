@@ -18,20 +18,26 @@ const STEPS = [
   "Achats et restauration",
   "Votre situation fournisseur",
   "Les postes à analyser",
+  "Votre personnel",
   "Pour recevoir votre diagnostic",
 ];
 const RESULTS_STEP = STEPS.length;
 
 const ACTIVITIES = [
-  "Kebab",
-  "Tacos",
-  "Burger",
-  "Pizzeria",
+  "Restauration rapide",
+  "Restauration traditionnelle",
   "Boucherie",
   "Boulangerie",
   "Hôtellerie",
-  "Autre TPE/PME",
+  "Autres",
 ];
+
+// /api/analyze attend un chiffre d'affaires mensuel.
+const CA_PERIODS = [
+  { value: "Journalier", toMonthly: 30, placeholder: "Ex. 1 500" },
+  { value: "Mensuel", toMonthly: 1, placeholder: "Ex. 40 000" },
+  { value: "Annuel", toMonthly: 1 / 12, placeholder: "Ex. 480 000" },
+] as const;
 
 // Les libelles sont les noms de postes attendus par /api/analyze.
 const GENERAL_CHARGES = [
@@ -39,10 +45,10 @@ const GENERAL_CHARGES = [
   { name: "telecom", label: "Télécom" },
   { name: "internet", label: "Internet" },
   { name: "insurance", label: "Assurance" },
-  { name: "supplies", label: "Fournitures" },
+  { name: "supplies", label: "Fournitures (hors alimentaire)" },
   { name: "vehicles", label: "Véhicules" },
   { name: "mutuelle", label: "Mutuelle / prévoyance" },
-  { name: "rh", label: "RH / services externalisés" },
+  { name: "rh", label: "RH / Comptabilité / Services externalisés" },
 ] as const;
 
 const PURCHASES = [
@@ -62,7 +68,10 @@ const SUPPLIER_QUESTIONS = [
 
 const NO_CASH_CARRY = "Aucun";
 const OTHER_CASH_CARRY = "Autre";
-const CASH_CARRIES = ["METRO", "Promocash", "Transgourmet", "Sysco / Brake", OTHER_CASH_CARRY, NO_CASH_CARRY];
+const CASH_CARRIES = ["METRO", "Promocash", "Transgourmet", OTHER_CASH_CARRY, NO_CASH_CARRY];
+
+const OPCO_ANSWERS = ["Oui", "Non", "Je ne sais pas"];
+const YES_NO = ["Oui", "Non"];
 
 const HOW_FOUND_OPTIONS = [
   "Recherche internet",
@@ -78,6 +87,7 @@ const INITIAL_FORM = {
   department: "",
   city: "",
   ca: "",
+  caPeriod: "Mensuel",
   energy: "",
   telecom: "",
   internet: "",
@@ -90,11 +100,14 @@ const INITIAL_FORM = {
   drinks: "",
   pack: "",
   suppliers: "",
-  compare: "Jamais",
-  negotiate: "Jamais",
-  satisfaction: "Non",
+  compare: "",
+  negotiate: "",
+  satisfaction: "",
   cashOther: "",
   cashMonthly: "",
+  employees: "",
+  knowsOpco: "",
+  trainingPlan: "",
   firstName: "",
   lastName: "",
   email: "",
@@ -115,13 +128,16 @@ export default function DiagnosticPage() {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [cashCarriers, setCashCarriers] = useState<string[]>([]);
-  const [target, setTarget] = useState<PostName[]>([]);
-  const [targetAll, setTargetAll] = useState(true);
+  // Tous coches par defaut : l'adherent decoche ce qu'il ne veut pas analyser.
+  const [target, setTarget] = useState<PostName[]>(POSTS);
   const [callbackWanted, setCallbackWanted] = useState(false);
   const [targetError, setTargetError] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>("idle");
   const [callbackStatus, setCallbackStatus] = useState<CallbackStatus>("idle");
+
+  const targetAll = target.length === POSTS.length;
+  const caPeriod = CA_PERIODS.find(({ value }) => value === formData.caPeriod) ?? CA_PERIODS[1];
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -152,7 +168,14 @@ export default function DiagnosticPage() {
     });
   };
 
-  const buildPayload = () => ({ ...formData, cashCarriers, target, targetAll });
+  const buildPayload = () => ({
+    ...formData,
+    ca: formData.ca === "" ? "" : Number(formData.ca) * caPeriod.toMonthly,
+    caEntered: formData.ca,
+    cashCarriers,
+    target,
+    targetAll,
+  });
 
   const submitDiagnostic = async (result: Analysis, wantsCallback: boolean) => {
     const response = await fetch("/api/diagnostic/submit", {
@@ -210,12 +233,12 @@ export default function DiagnosticPage() {
 
   const hasAmountToAnalyze = () =>
     AMOUNT_FIELDS.some(
-      ({ name, label }) => Number(formData[name]) > 0 && (targetAll || target.includes(label as PostName))
+      ({ name, label }) => Number(formData[name]) > 0 && target.includes(label as PostName)
     );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (step === 4 && !targetAll && target.length === 0) {
+    if (step === 4 && target.length === 0) {
       setTargetError("Sélectionnez au moins un poste à analyser.");
       return;
     }
@@ -262,6 +285,31 @@ export default function DiagnosticPage() {
         className={inputClass}
       />
     </Field>
+  );
+
+  const renderRadioGroup = (name: TextField, legend: string, options: string[]) => (
+    <fieldset>
+      <legend className="mb-1.5 text-sm font-bold text-[#17212b]">
+        {legend}
+        <span className="text-brand"> *</span>
+      </legend>
+      <div className="flex flex-wrap gap-2.5">
+        {options.map((option) => (
+          <label key={option} className={`${checkClass} cursor-pointer pr-5`}>
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              required
+              checked={formData[name] === option}
+              onChange={handleChange}
+              className={checkboxClass}
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 
   return (
@@ -348,19 +396,34 @@ export default function DiagnosticPage() {
                       </Field>
                     </div>
                     {renderTextField("city", "Ville", "text", "address-level2")}
-                    <Field label="Chiffre d'affaires annuel approximatif (€)" htmlFor="ca" required>
-                      <input
-                        id="ca"
-                        type="number"
-                        name="ca"
-                        required
-                        min="1"
-                        step="any"
-                        inputMode="decimal"
-                        value={formData.ca}
-                        onChange={handleChange}
-                        className={inputClass}
-                      />
+                    <Field label="Chiffre d'affaires approximatif (€)" htmlFor="ca" required>
+                      {/* Grille : en flex, le w-full du select ecrasait le champ sur mobile. */}
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                        <input
+                          id="ca"
+                          type="number"
+                          name="ca"
+                          required
+                          min="1"
+                          step="any"
+                          inputMode="decimal"
+                          placeholder={caPeriod.placeholder}
+                          value={formData.ca}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                        <select
+                          name="caPeriod"
+                          aria-label="Période du chiffre d'affaires"
+                          value={formData.caPeriod}
+                          onChange={handleChange}
+                          className={inputClass}
+                        >
+                          {CA_PERIODS.map(({ value }) => (
+                            <option key={value} value={value}>{value}</option>
+                          ))}
+                        </select>
+                      </div>
                     </Field>
                   </>
                 )}
@@ -399,6 +462,7 @@ export default function DiagnosticPage() {
                       {SUPPLIER_QUESTIONS.map(({ name, label, options }) => (
                         <Field key={name} label={label} htmlFor={name}>
                           <select id={name} name={name} value={formData[name]} onChange={handleChange} className={inputClass}>
+                            <option value="" disabled>Sélectionner votre choix</option>
                             {options.map((option) => (
                               <option key={option} value={option}>{option}</option>
                             ))}
@@ -439,7 +503,7 @@ export default function DiagnosticPage() {
 
                 {step === 4 && (
                   <>
-                    <StepTitle subtitle="Sélectionnez un ou plusieurs postes, ou choisissez l’analyse complète.">
+                    <StepTitle subtitle="Tous les postes sont sélectionnés. Décochez ceux que vous ne souhaitez pas analyser.">
                       5. Quels postes souhaitez-vous analyser ?
                     </StepTitle>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -449,18 +513,17 @@ export default function DiagnosticPage() {
                           checked={targetAll}
                           onChange={(e) => {
                             setTargetError("");
-                            setTargetAll(e.target.checked);
+                            setTarget(e.target.checked ? POSTS : []);
                           }}
                           className={checkboxClass}
                         />
                         Tous les postes de dépenses
                       </label>
                       {POSTS.map((post) => (
-                        <label key={post} className={`${checkClass} ${targetAll ? "opacity-60" : "cursor-pointer"}`}>
+                        <label key={post} className={`${checkClass} cursor-pointer`}>
                           <input
                             type="checkbox"
-                            checked={targetAll || target.includes(post)}
-                            disabled={targetAll}
+                            checked={target.includes(post)}
                             onChange={() => togglePost(post)}
                             className={checkboxClass}
                           />
@@ -476,8 +539,32 @@ export default function DiagnosticPage() {
 
                 {step === 5 && (
                   <>
+                    <StepTitle subtitle="Quelques questions sur votre équipe et la formation de vos salariés.">
+                      6. Votre personnel
+                    </StepTitle>
+                    <Field label="Nombre d'employés" htmlFor="employees" required>
+                      <input
+                        id="employees"
+                        type="number"
+                        name="employees"
+                        required
+                        min="0"
+                        step="1"
+                        inputMode="numeric"
+                        value={formData.employees}
+                        onChange={handleChange}
+                        className={inputClass}
+                      />
+                    </Field>
+                    {renderRadioGroup("knowsOpco", "Connaissez-vous votre OPCO ?", OPCO_ANSWERS)}
+                    {renderRadioGroup("trainingPlan", "Avez-vous un plan de formation en cours ?", YES_NO)}
+                  </>
+                )}
+
+                {step === 6 && (
+                  <>
                     <StepTitle subtitle="Ces coordonnées permettent à SNAAC de vous recontacter si vous souhaitez aller plus loin.">
-                      6. Pour recevoir votre diagnostic
+                      7. Pour recevoir votre diagnostic
                     </StepTitle>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {renderTextField("firstName", "Prénom", "text", "given-name")}

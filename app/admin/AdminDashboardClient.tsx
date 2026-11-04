@@ -29,10 +29,10 @@ const EXPENSE_FIELDS = [
   { name: "telecom", label: "Télécom" },
   { name: "internet", label: "Internet" },
   { name: "insurance", label: "Assurance" },
-  { name: "supplies", label: "Fournitures" },
+  { name: "supplies", label: "Fournitures (hors alimentaire)" },
   { name: "vehicles", label: "Véhicules" },
   { name: "mutuelle", label: "Mutuelle / prévoyance" },
-  { name: "rh", label: "RH / services externalisés" },
+  { name: "rh", label: "RH / Comptabilité / Services externalisés" },
   { name: "pack", label: "Emballages" },
 ];
 
@@ -84,6 +84,10 @@ function parseSupplierSituation(diagnostic: Diagnostic): [string, string][] {
   ];
 }
 
+function formatYesNo(value: boolean | null): string {
+  return value === null ? "" : value ? "Oui" : "Non";
+}
+
 function parseExpenses(diagnostic: Diagnostic) {
   const raw = parseJson(diagnostic.rawPayload);
   if (typeof raw !== "object" || raw === null) return [];
@@ -107,14 +111,14 @@ function downloadCsv(rows: Diagnostic[]) {
     "Date", "Entreprise", "Activité", "Département", "Ville", "CA", "Score", "Label",
     "Économies basses", "Économies médianes", "Économies hautes", "Prénom", "Nom",
     "Email", "Téléphone", "Rappel souhaité", "Cash & Carry", "Dépenses Cash & Carry (€/mois)",
-    "Connu via", "Statut", "Notes",
+    "Connu via", "Employés", "Connaît son OPCO", "Plan de formation", "Statut", "Notes",
   ];
   const lines = rows.map((row) => [
     dateTime.format(new Date(row.createdAt)), row.company, row.activity, row.department,
     row.city, row.ca, row.score, row.label, row.savingsLow, row.savingsMid, row.savingsHigh,
     row.firstName, row.lastName, row.email, row.phone, row.callbackWanted ? "Oui" : "Non",
     row.cashCarryProviders?.join(", ") ?? null, row.cashCarryExpenses, row.howFound,
-    STATUS_LABELS[row.status], row.notes,
+    row.employeeCount, row.knowsOpco, formatYesNo(row.hasTrainingPlan), STATUS_LABELS[row.status], row.notes,
   ]);
   const csv = [header, ...lines].map((line) => line.map(csvCell).join(";")).join("\r\n");
 
@@ -220,7 +224,7 @@ function DetailPanel({ diagnostic, onClose, onUpdate }: DetailPanelProps) {
               ["Activité", diagnostic.activity],
               ["Département", diagnostic.department],
               ["Ville", diagnostic.city],
-              ["Chiffre d'affaires", euros.format(diagnostic.ca)],
+              ["Chiffre d'affaires annuel", euros.format(diagnostic.ca)],
             ]}
           />
         </DetailSection>
@@ -233,6 +237,16 @@ function DetailPanel({ diagnostic, onClose, onUpdate }: DetailPanelProps) {
               ["Téléphone", diagnostic.phone],
               ["Rappel souhaité", diagnostic.callbackWanted ? "Oui" : "Non"],
               ["Connu via", diagnostic.howFound ?? ""],
+            ]}
+          />
+        </DetailSection>
+
+        <DetailSection title="Personnel">
+          <DetailRows
+            rows={[
+              ["Nombre d'employés", diagnostic.employeeCount === null ? "" : String(diagnostic.employeeCount)],
+              ["Connaît son OPCO", diagnostic.knowsOpco ?? ""],
+              ["Plan de formation en cours", formatYesNo(diagnostic.hasTrainingPlan)],
             ]}
           />
         </DetailSection>
@@ -370,6 +384,10 @@ export default function AdminDashboardClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(update),
       });
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return false;
+      }
       if (!response.ok) throw new Error(`Mise à jour en erreur (${response.status})`);
       const updated = (await response.json()) as Diagnostic;
       setRows((current) => current.map((row) => (row.id === id ? updated : row)));
@@ -391,6 +409,10 @@ export default function AdminDashboardClient() {
     setBusyId(row.id);
     try {
       const response = await fetch(`/api/admin/diagnostics/${row.id}`, { method: "DELETE" });
+      if (response.status === 401) {
+        router.push("/admin/login");
+        return;
+      }
       if (!response.ok) throw new Error(`Suppression en erreur (${response.status})`);
       setRows((current) => current.filter(({ id }) => id !== row.id));
     } catch (error) {

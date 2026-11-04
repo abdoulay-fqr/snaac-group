@@ -25,6 +25,9 @@ export const diagnostics = pgTable("diagnostics", {
   cashCarryProviders: text("cash_carry_providers").array(),
   cashCarryExpenses: numeric("cash_carry_expenses"),
   howFound: text("how_found"),
+  employeeCount: integer("employee_count"),
+  knowsOpco: text("knows_opco"),
+  hasTrainingPlan: boolean("has_training_plan"),
   rawPayload: text("raw_payload").notNull(),
 });
 

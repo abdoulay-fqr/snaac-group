@@ -11,6 +11,7 @@ const DEFAULT_NOTIFICATION_EMAIL = "contact@snaac-group.com";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_CASH_CARRY_PROVIDERS = 6;
+const OPCO_ANSWERS = ["Oui", "Non", "Je ne sais pas"];
 
 const euros = new Intl.NumberFormat("fr-FR", {
   style: "currency",
@@ -39,6 +40,17 @@ function toNumber(value: unknown): number {
 function toInteger(value: unknown): number | null {
   const number = toNumber(value);
   return Number.isFinite(number) ? Math.round(number) : null;
+}
+
+function choice(value: unknown, allowed: string[]): string | null {
+  const answer = text(value);
+  return allowed.includes(answer) ? answer : null;
+}
+
+// Le formulaire envoie un chiffre d'affaires mensuel ; la colonne ca reste annuelle.
+function annualRevenue(payload: Payload): number | null {
+  const monthly = toNumber(payload.ca);
+  return Number.isFinite(monthly) ? monthly * 12 : null;
 }
 
 function formatEuros(value: unknown): string {
@@ -106,7 +118,14 @@ function renderEmail(payload: Payload, analysis: Payload, contact: Payload, diag
       ["Activité", text(payload.activity)],
       ["Département", text(payload.department)],
       ["Ville", text(payload.city)],
-      ["Chiffre d'affaires", formatEuros(payload.ca)],
+      ["Chiffre d'affaires annuel", formatEuros(annualRevenue(payload))],
+      ["Saisi par l'entreprise", `${formatEuros(payload.caEntered)} (${text(payload.caPeriod).toLowerCase() || "—"})`],
+    ])}</table>
+    <h2 ${heading}>Personnel</h2>
+    <table style="font-size:14px;">${renderRows([
+      ["Nombre d'employés", text(payload.employees)],
+      ["Connaît son OPCO", text(payload.knowsOpco)],
+      ["Plan de formation en cours", text(payload.trainingPlan)],
     ])}</table>
     <h2 ${heading}>Contact</h2>
     <table style="font-size:14px;">${renderRows([
@@ -146,6 +165,9 @@ function renderEmail(payload: Payload, analysis: Payload, contact: Payload, diag
 async function saveDiagnostic(payload: Payload, analysis: Payload, contact: Payload, id: string) {
   const savings = isRecord(analysis.savings) ? analysis.savings : {};
   const cashExpenses = toNumber(payload.cashMonthly);
+  const employees = toInteger(payload.employees);
+  const trainingPlan = choice(payload.trainingPlan, ["Oui", "Non"]);
+  const ca = annualRevenue(payload);
 
   try {
     await db.insert(diagnostics).values({
@@ -154,7 +176,7 @@ async function saveDiagnostic(payload: Payload, analysis: Payload, contact: Payl
       activity: text(payload.activity),
       department: text(payload.department),
       city: text(payload.city),
-      ca: toInteger(payload.ca) ?? 0,
+      ca: ca === null ? 0 : Math.round(ca),
       score: toInteger(analysis.score),
       label: text(analysis.label) || null,
       methodVersion: text(analysis.methodVersion),
@@ -170,6 +192,9 @@ async function saveDiagnostic(payload: Payload, analysis: Payload, contact: Payl
       cashCarryProviders: textList(payload.cashCarriers),
       cashCarryExpenses: Number.isFinite(cashExpenses) && cashExpenses >= 0 ? String(cashExpenses) : null,
       howFound: text(payload.howFound) || null,
+      employeeCount: employees !== null && employees >= 0 ? employees : null,
+      knowsOpco: choice(payload.knowsOpco, OPCO_ANSWERS),
+      hasTrainingPlan: trainingPlan === null ? null : trainingPlan === "Oui",
       rawPayload: JSON.stringify(payload),
     }).onConflictDoUpdate({
       target: diagnostics.id,
