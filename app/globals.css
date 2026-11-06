@@ -116,100 +116,226 @@ html {
 }
 
 /* ===== HERO : BOUTON DIAGNOSTIC PREMIUM ===== */
-/* Seuls transform et opacity sont animés en boucle (composités GPU, 60fps). */
-.cta-premium {
+/* Boucles animees uniquement via transform et opacity (composites GPU).
+   Les ombres et flous sont statiques : seul leur calque bouge. */
+.cta-wrap {
   position: relative;
+  display: inline-flex;
   isolation: isolate;
-  will-change: transform;
-  --cta-shimmer-duration: 3.2s;
-  transition:
-    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 300ms ease;
+  --cta-orbit-x: 165px;
+  --cta-orbit-y: 46px;
 }
 
-/* Halo pulsé : box-shadow figé, seule l'opacité/échelle du calque varie. */
-.cta-premium::before {
-  content: "";
+/* --- Halo externe diffus orange/dore --- */
+.cta-halo {
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  box-shadow: 0 0 24px 6px rgb(255 107 53 / 0.55);
-  opacity: 0.35;
+  inset: -28px -40px;
+  z-index: -2;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 140 26 / 0.55),
+    rgb(255 179 71 / 0.25) 55%,
+    transparent 100%
+  );
+  filter: blur(14px);
+  opacity: 0.55;
   will-change: transform, opacity;
-  animation: cta-glow 2.8s ease-in-out infinite;
+  animation: cta-halo 3.6s ease-in-out infinite;
   pointer-events: none;
 }
 
-.cta-premium:hover,
-.cta-premium:focus-visible {
-  --cta-shimmer-duration: 2s;
-  transform: translateY(-2px) scale(1.05);
-  box-shadow:
-    0 14px 30px -8px rgb(255 107 53 / 0.6),
-    0 6px 12px -4px rgb(0 0 0 / 0.25);
-  filter: brightness(1.08);
+@keyframes cta-halo {
+  0%, 100% { opacity: 0.45; transform: scale(0.94); }
+  50% { opacity: 0.9; transform: scale(1.06); }
 }
 
+/* --- Anneaux qui s'expandent (ripple continu) --- */
+.cta-ring {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(255 140 60 / 0.7);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: cta-ring 3.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  pointer-events: none;
+}
+.cta-ring--late { animation-delay: 1.8s; }
+
+@keyframes cta-ring {
+  0% { opacity: 0.55; transform: scale(1, 1); }
+  100% { opacity: 0; transform: scale(1.14, 1.6); }
+}
+
+/* --- Particules en orbite elliptique ---
+   Deux calques imbriques : X et Y oscillent en ease-in-out, dephases d'un
+   quart de periode, ce qui trace une ellipse autour du bouton. */
+.cta-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 1;
+  pointer-events: none;
+  --d: 9s;
+  animation: cta-orbit-x var(--d) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s);
+  will-change: transform;
+}
+.cta-orbit > span {
+  position: relative;
+  display: block;
+  animation: cta-orbit-y var(--d) ease-in-out infinite alternate;
+  animation-delay: calc(var(--delay, 0s) - var(--d) / 2);
+  will-change: transform;
+}
+.cta-orbit > span::before {
+  content: "";
+  position: absolute;
+  width: var(--size, 5px);
+  height: var(--size, 5px);
+  margin: calc(var(--size, 5px) / -2);
+  border-radius: 9999px;
+  background: radial-gradient(circle, #fff6e0 0%, #ffb02e 50%, #ff7a1a 100%);
+  box-shadow: 0 0 8px 2px rgb(255 150 40 / 0.55);
+  will-change: transform, opacity;
+  animation: cta-twinkle var(--tw, 2.4s) ease-in-out infinite;
+}
+
+.cta-orbit--a { --delay: 0s; --size: 6px; --tw: 2.2s; }
+.cta-orbit--b { --delay: -6s; --size: 5px; --tw: 3.1s; }
+.cta-orbit--c { --delay: -12s; --size: 7px; --tw: 2.7s; }
+
+@media (max-width: 480px) {
+  .cta-wrap { --cta-orbit-x: 140px; --cta-orbit-y: 42px; }
+}
+
+@keyframes cta-orbit-x {
+  from { transform: translateX(calc(var(--cta-orbit-x) * -1)); }
+  to { transform: translateX(var(--cta-orbit-x)); }
+}
+@keyframes cta-orbit-y {
+  from { transform: translateY(calc(var(--cta-orbit-y) * -1)); }
+  to { transform: translateY(var(--cta-orbit-y)); }
+}
+@keyframes cta-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* --- Le bouton --- */
+.cta-premium {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  will-change: transform;
+  text-shadow: 0 0 10px rgb(255 255 255 / 0.55), 0 1px 1px rgb(120 30 0 / 0.25);
+  box-shadow:
+    0 10px 24px -10px rgb(229 70 20 / 0.7),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
+  transition:
+    transform 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 350ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 350ms ease;
+}
+
+.cta-wrap:hover .cta-premium,
+.cta-premium:focus-visible {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 18px 36px -10px rgb(229 70 20 / 0.8),
+    0 6px 12px -4px rgb(0 0 0 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+  filter: brightness(1.06) saturate(1.05);
+}
 .cta-premium:active {
   transform: translateY(0) scale(1.02);
   transition-duration: 120ms;
 }
 
-/* Calque de brillance, découpé aux bords du bouton. */
-.cta-shimmer {
+/* Degrade tournant : un carre surdimensionne en degrade lineaire pivote
+   derriere le texte, decoupe par l'overflow du bouton. */
+.cta-bg {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  z-index: -1;
   border-radius: inherit;
+  overflow: hidden;
   pointer-events: none;
 }
-
-.cta-shimmer::before {
+.cta-bg::before {
   content: "";
   position: absolute;
-  top: -50%;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  aspect-ratio: 1;
+  background: linear-gradient(
+    135deg,
+    #ff8c1a 0%,
+    #ff6b35 30%,
+    #ff4a24 50%,
+    #ff6b35 70%,
+    #ff9a2e 100%
+  );
+  transform: translate(-50%, -50%) rotate(0deg);
+  will-change: transform;
+  animation: cta-spin 7s linear infinite;
+}
+/* Brillance diagonale */
+.cta-bg::after {
+  content: "";
+  position: absolute;
+  top: -60%;
   left: 0;
-  width: 45%;
-  height: 200%;
+  width: 38%;
+  height: 220%;
   background: linear-gradient(
     90deg,
-    transparent 0%,
-    rgb(255 255 255 / 0) 20%,
-    rgb(255 255 255 / 0.45) 50%,
-    rgb(255 255 255 / 0) 80%,
-    transparent 100%
+    rgb(255 255 255 / 0) 0%,
+    rgb(255 255 255 / 0.15) 30%,
+    rgb(255 255 255 / 0.75) 50%,
+    rgb(255 255 255 / 0.15) 70%,
+    rgb(255 255 255 / 0) 100%
   );
-  transform: translateX(-160%) rotate(20deg);
+  transform: translateX(-180%) rotate(22deg);
   will-change: transform;
-  animation: cta-shimmer var(--cta-shimmer-duration) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: cta-shimmer 3.4s cubic-bezier(0.45, 0, 0.2, 1) infinite;
 }
 
+@keyframes cta-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
 @keyframes cta-shimmer {
-  0% { transform: translateX(-160%) rotate(20deg); }
-  /* Le reflet traverse sur 45 % du cycle puis reste hors champ. */
-  45%, 100% { transform: translateX(320%) rotate(20deg); }
+  0% { transform: translateX(-180%) rotate(22deg); }
+  40%, 100% { transform: translateX(380%) rotate(22deg); }
 }
 
-@keyframes cta-glow {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.04); }
-}
-
+/* --- Mouvement reduit : tout est fige, le bouton reste soigne --- */
 @media (prefers-reduced-motion: reduce) {
+  .cta-halo,
+  .cta-ring,
+  .cta-orbit,
+  .cta-orbit > span,
+  .cta-orbit > span::before,
   .cta-premium,
-  .cta-premium::before,
-  .cta-shimmer::before {
+  .cta-bg::before,
+  .cta-bg::after {
     animation: none;
     transition: none;
     will-change: auto;
   }
-  .cta-shimmer::before { display: none; }
-  .cta-premium::before { opacity: 0.5; }
-  .cta-premium:hover,
-  .cta-premium:focus-visible,
-  .cta-premium:active {
-    transform: none;
+  .cta-ring,
+  .cta-orbit,
+  .cta-bg::after { display: none; }
+  .cta-halo { opacity: 0.6; transform: none; }
+  .cta-bg::before {
+    transform: translate(-50%, -50%);
   }
+  .cta-wrap:hover .cta-premium,
+  .cta-premium:focus-visible,
+  .cta-premium:active { transform: none; }
 }
