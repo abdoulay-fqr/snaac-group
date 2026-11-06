@@ -100,9 +100,9 @@ const INITIAL_FORM = {
   drinks: "",
   pack: "",
   suppliers: "",
-  compare: "",
-  negotiate: "",
-  satisfaction: "",
+  compare: "Jamais",
+  negotiate: "Jamais",
+  satisfaction: "Non",
   cashOther: "",
   cashMonthly: "",
   employees: "",
@@ -462,7 +462,6 @@ export default function DiagnosticPage() {
                       {SUPPLIER_QUESTIONS.map(({ name, label, options }) => (
                         <Field key={name} label={label} htmlFor={name}>
                           <select id={name} name={name} value={formData[name]} onChange={handleChange} className={inputClass}>
-                            <option value="" disabled>Sélectionner votre choix</option>
                             {options.map((option) => (
                               <option key={option} value={option}>{option}</option>
                             ))}
