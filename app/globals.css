@@ -114,3 +114,102 @@ html {
   border-left: 3px solid #cbd5e1;
   color: #64748b;
 }
+
+/* ===== HERO : BOUTON DIAGNOSTIC PREMIUM ===== */
+/* Seuls transform et opacity sont animés en boucle (composités GPU, 60fps). */
+.cta-premium {
+  position: relative;
+  isolation: isolate;
+  will-change: transform;
+  --cta-shimmer-duration: 3.2s;
+  transition:
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 300ms ease;
+}
+
+/* Halo pulsé : box-shadow figé, seule l'opacité/échelle du calque varie. */
+.cta-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  box-shadow: 0 0 24px 6px rgb(255 107 53 / 0.55);
+  opacity: 0.35;
+  will-change: transform, opacity;
+  animation: cta-glow 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.cta-premium:hover,
+.cta-premium:focus-visible {
+  --cta-shimmer-duration: 2s;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 14px 30px -8px rgb(255 107 53 / 0.6),
+    0 6px 12px -4px rgb(0 0 0 / 0.25);
+  filter: brightness(1.08);
+}
+
+.cta-premium:active {
+  transform: translateY(0) scale(1.02);
+  transition-duration: 120ms;
+}
+
+/* Calque de brillance, découpé aux bords du bouton. */
+.cta-shimmer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.cta-shimmer::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: 0;
+  width: 45%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(255 255 255 / 0) 20%,
+    rgb(255 255 255 / 0.45) 50%,
+    rgb(255 255 255 / 0) 80%,
+    transparent 100%
+  );
+  transform: translateX(-160%) rotate(20deg);
+  will-change: transform;
+  animation: cta-shimmer var(--cta-shimmer-duration) cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes cta-shimmer {
+  0% { transform: translateX(-160%) rotate(20deg); }
+  /* Le reflet traverse sur 45 % du cycle puis reste hors champ. */
+  45%, 100% { transform: translateX(320%) rotate(20deg); }
+}
+
+@keyframes cta-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-premium,
+  .cta-premium::before,
+  .cta-shimmer::before {
+    animation: none;
+    transition: none;
+    will-change: auto;
+  }
+  .cta-shimmer::before { display: none; }
+  .cta-premium::before { opacity: 0.5; }
+  .cta-premium:hover,
+  .cta-premium:focus-visible,
+  .cta-premium:active {
+    transform: none;
+  }
+}

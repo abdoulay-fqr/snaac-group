@@ -3,7 +3,8 @@
 import Link from "next/link";
 import type { LandingContent } from "@/lib/content";
 
-const diagnosticLinkClass = "inline-block bg-brand text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 hover:scale-105 hover:brightness-110 hover:shadow-xl";
+// Animations (brillance, halo, hover) definies dans globals.css sous .cta-premium.
+const diagnosticLinkClass = "cta-premium inline-block bg-brand text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg";
 
 export default function Hero({ content }: { content: LandingContent["hero"] }) {
   return (
@@ -33,7 +34,8 @@ export default function Hero({ content }: { content: LandingContent["hero"] }) {
         </p>
         <div className="flex justify-center">
           <Link href="/diagnostic" className={diagnosticLinkClass}>
-            Je veux économiser sur mes charges →
+            <span className="cta-shimmer" aria-hidden="true" />
+            <span className="relative">Diagnostic Gratuit →</span>
           </Link>
         </div>
       </div>
