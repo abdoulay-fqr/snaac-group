@@ -10,7 +10,7 @@ export default function Hero({ content }: { content: LandingContent["hero"] }) {
   return (
     // Hauteur de l'ecran : le contenu est centre verticalement sous l'en-tete fixe.
     <section id="accueil" className="overflow-x-clip flex min-h-svh flex-col justify-center pt-28 pb-16 text-left">
-      <div className="mx-auto px-20">
+      <div className="mx-auto px-6 md:px-20">
         <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
           <span className="text-brand">
             {content.titleHighlight}
